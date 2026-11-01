@@ -583,45 +583,63 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 
   Widget _monthsCard(CalculationResult result) {
-    return _Card(
-      padding: const EdgeInsets.fromLTRB(17, 17, 17, 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          const Row(
-            children: <Widget>[
-              Expanded(
-                child: _SectionTitle(
-                  eyebrow: '12 MONTHS',
-                  title: '月度拆解',
-                  subtitle: '跨税档月份会特别标记',
-                ),
-              ),
-              Icon(Icons.calendar_month_rounded, color: _teal, size: 21),
-            ],
+    final MonthlyCalculationResult month = result.months[_month - 1];
+    final String preview = _invalidDraft
+        ? '请完成参数输入后查看月度结果'
+        : _annualView
+        ? '全年预览 · 共 12 个月，跨税档月份会标记'
+        : '$_month 月预览 · ${formatRate(month.taxBracketRateBps)} 档 · 税后现金 ${formatCents(month.netCashCents)}';
+
+    return Card(
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          tilePadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 3),
+          childrenPadding: const EdgeInsets.fromLTRB(17, 0, 17, 17),
+          leading: Container(
+            width: 37,
+            height: 37,
+            decoration: BoxDecoration(
+              color: const Color(0xFFEAF7F4),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: const Icon(
+              Icons.calendar_month_rounded,
+              color: _teal,
+              size: 19,
+            ),
           ),
-          const SizedBox(height: 12),
-          if (_invalidDraft)
-            _notice(
-              '参数草稿尚未完成，月度结果暂时隐藏。',
-              background: const Color(0xFFFFF7E8),
-              foreground: const Color(0xFF805C1E),
-              icon: Icons.edit_note_rounded,
-            )
-          else
-            for (int i = 0; i < result.months.length; i++)
-              _MonthRow(
-                month: result.months[i],
-                previous: i == 0 ? null : result.months[i - 1],
-                selected: !_annualView && _month == i + 1,
-                onTap: () {
-                  setState(() {
-                    _annualView = false;
-                    _month = i + 1;
-                  });
-                },
-              ),
-        ],
+          title: const Text(
+            '月度拆解',
+            style: TextStyle(color: _navy, fontWeight: FontWeight.w700),
+          ),
+          subtitle: Text(
+            preview,
+            style: const TextStyle(color: _muted, fontSize: 11),
+          ),
+          children: <Widget>[
+            if (_invalidDraft)
+              _notice(
+                '参数草稿尚未完成，月度结果暂时隐藏。',
+                background: const Color(0xFFFFF7E8),
+                foreground: const Color(0xFF805C1E),
+                icon: Icons.edit_note_rounded,
+              )
+            else
+              for (int i = 0; i < result.months.length; i++)
+                _MonthRow(
+                  month: result.months[i],
+                  previous: i == 0 ? null : result.months[i - 1],
+                  selected: !_annualView && _month == i + 1,
+                  onTap: () {
+                    setState(() {
+                      _annualView = false;
+                      _month = i + 1;
+                    });
+                  },
+                ),
+          ],
+        ),
       ),
     );
   }
