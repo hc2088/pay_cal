@@ -54,3 +54,6 @@ app.*.map.json
 /ios/Flutter/flutter_export_environment.sh
 **/xcuserdata/
 *.xcuserstate
+
+# Kotlin compiler session state
+/android/.kotlin/

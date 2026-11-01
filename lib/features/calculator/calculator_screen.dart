@@ -746,6 +746,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final int benefitB = _annualView
         ? result.annualBenefitBCents
         : month.benefitBCents;
+    final int bilateralHousingFund = _annualView
+        ? result.annualEmployerHousingFundCents +
+              result.annualEmployeeHousingFundCents
+        : month.employerHousingFundCents + month.employeeHousingFundCents;
+    final int employeeMedical = _annualView
+        ? result.annualEmployeeMedicalCents
+        : month.employeeMedicalCents;
+    final int employeePension = _annualView
+        ? result.annualEmployeePensionCents
+        : month.employeePensionCents;
     final int tax = _annualView ? result.annualTaxCents : month.monthlyTaxCents;
     final String taxNote = _annualView
         ? '全年应税收入  ${formatCents(result.annualTaxableIncomeCents)}'
@@ -863,6 +873,30 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 ],
               );
             },
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(17, 14, 17, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  _DetailGroup(
+                    title: '权益账户入账',
+                    rows: <_DetailLine>[
+                      _DetailLine('公积金入账（单位 + 个人）', bilateralHousingFund),
+                      _DetailLine('个人医保账户入账', employeeMedical),
+                      _DetailLine('个人养老账户入账', employeePension),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    '公积金为单位和个人缴存合计；账户入账不等于可立即支取。',
+                    style: TextStyle(color: _muted, fontSize: 10),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 11),
           _taxStrip(tax, _annualView ? '全年累计预扣个税' : '本月预扣个税', taxNote),

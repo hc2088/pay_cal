@@ -19,7 +19,7 @@ class CalculatorInputs {
 
   factory CalculatorInputs.defaults() {
     return const CalculatorInputs(
-      grossMonthlySalaryCents: 3300000,
+      grossMonthlySalaryCents: 3500000,
       specialAdditionalDeductionCents: 500000,
       socialBaseMode: SocialBaseMode.followSalary,
       customSocialBaseCents: null,

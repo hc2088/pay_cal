@@ -17,6 +17,8 @@ class SavedCalculation {
     required this.annualTaxCents,
     required this.annualEmployerHousingFundCents,
     required this.annualEmployeeHousingFundCents,
+    required this.annualEmployeeMedicalCents,
+    required this.annualEmployeePensionCents,
   });
 
   factory SavedCalculation.capture({
@@ -38,6 +40,8 @@ class SavedCalculation {
       annualTaxCents: result.annualTaxCents,
       annualEmployerHousingFundCents: result.annualEmployerHousingFundCents,
       annualEmployeeHousingFundCents: result.annualEmployeeHousingFundCents,
+      annualEmployeeMedicalCents: result.annualEmployeeMedicalCents,
+      annualEmployeePensionCents: result.annualEmployeePensionCents,
     );
   }
 
@@ -53,6 +57,11 @@ class SavedCalculation {
   final int annualTaxCents;
   final int annualEmployerHousingFundCents;
   final int annualEmployeeHousingFundCents;
+  final int annualEmployeeMedicalCents;
+  final int annualEmployeePensionCents;
+
+  int get annualBilateralHousingFundCents =>
+      annualEmployerHousingFundCents + annualEmployeeHousingFundCents;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
@@ -69,6 +78,8 @@ class SavedCalculation {
       'annualTaxCents': annualTaxCents,
       'annualEmployerHousingFundCents': annualEmployerHousingFundCents,
       'annualEmployeeHousingFundCents': annualEmployeeHousingFundCents,
+      'annualEmployeeMedicalCents': annualEmployeeMedicalCents,
+      'annualEmployeePensionCents': annualEmployeePensionCents,
     };
   }
 
@@ -109,6 +120,19 @@ class SavedCalculation {
         'annualEmployeeHousingFundCents',
       ),
     };
+    final int annualEmployeeMedicalCents =
+        _readOptionalNonnegativeInt(json, 'annualEmployeeMedicalCents') ??
+        _nonnegativeDifference(
+          totals['annualBenefitACents']! -
+              totals['annualNetCashCents']! -
+              totals['annualEmployerHousingFundCents']! -
+              totals['annualEmployeeHousingFundCents']!,
+        );
+    final int annualEmployeePensionCents =
+        _readOptionalNonnegativeInt(json, 'annualEmployeePensionCents') ??
+        _nonnegativeDifference(
+          totals['annualBenefitBCents']! - totals['annualBenefitACents']!,
+        );
 
     if (id == null || savedAt == null || rulesVersion == null) {
       throw const FormatException('Invalid saved calculation metadata');
@@ -127,8 +151,27 @@ class SavedCalculation {
       annualTaxCents: totals['annualTaxCents']!,
       annualEmployerHousingFundCents: totals['annualEmployerHousingFundCents']!,
       annualEmployeeHousingFundCents: totals['annualEmployeeHousingFundCents']!,
+      annualEmployeeMedicalCents: annualEmployeeMedicalCents,
+      annualEmployeePensionCents: annualEmployeePensionCents,
     );
   }
+
+  static int? _readOptionalNonnegativeInt(
+    Map<String, dynamic> json,
+    String key,
+  ) {
+    final Object? value = json[key];
+    if (value == null) {
+      return null;
+    }
+    if (value is! int || value < 0) {
+      throw FormatException('Invalid saved calculation value: $key');
+    }
+    return value;
+  }
+
+  static int _nonnegativeDifference(int difference) =>
+      difference < 0 ? 0 : difference;
 
   static int _readNonnegativeInt(Map<String, dynamic> json, String key) {
     final Object? value = json[key];

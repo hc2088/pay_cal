@@ -54,6 +54,24 @@ class SavedCalculationDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _InfoCard(
+              title: '全年权益账户入账',
+              rows: <_InfoRowData>[
+                _InfoRowData(
+                  '公积金入账（单位 + 个人）',
+                  formatCents(calculation.annualBilateralHousingFundCents),
+                ),
+                _InfoRowData(
+                  '个人医保账户入账',
+                  formatCents(calculation.annualEmployeeMedicalCents),
+                ),
+                _InfoRowData(
+                  '个人养老账户入账',
+                  formatCents(calculation.annualEmployeePensionCents),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _InfoCard(
               title: '全年累计预扣个税',
               rows: <_InfoRowData>[
                 _InfoRowData(
@@ -99,7 +117,7 @@ class SavedCalculationDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             _InfoCard(
-              title: '公积金缴存结果',
+              title: '公积金缴存组成',
               rows: <_InfoRowData>[
                 _InfoRowData(
                   '个人月缴存额',
@@ -108,13 +126,6 @@ class SavedCalculationDetailScreen extends StatelessWidget {
                 _InfoRowData(
                   '单位月缴存额',
                   formatCents(calculation.annualEmployerHousingFundCents ~/ 12),
-                ),
-                _InfoRowData(
-                  '全年双边缴存额',
-                  formatCents(
-                    calculation.annualEmployeeHousingFundCents +
-                        calculation.annualEmployerHousingFundCents,
-                  ),
                 ),
               ],
             ),
