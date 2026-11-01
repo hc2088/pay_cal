@@ -235,6 +235,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ],
           ),
         ),
+        const SizedBox(width: 12),
         TextButton.icon(
           onPressed: () {
             Navigator.of(context).push(
