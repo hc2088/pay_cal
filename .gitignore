@@ -1,0 +1,56 @@
+# macOS and editor files
+.DS_Store
+.AppleDouble
+.LSOverride
+*.log
+*.pyc
+*.swp
+*.swo
+*.iml
+*.ipr
+*.iws
+.idea/
+.build/
+.buildlog/
+.history/
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# Flutter and Dart generated files / caches
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/doc/api/
+**/build/
+coverage/
+app.*.symbols
+app.*.map.json
+
+# FVM SDK links and local SDK cache; keep project version config files
+.fvm/flutter_sdk
+.fvm/versions/
+.fvm/current
+
+# Android local SDK settings and Gradle output
+/android/local.properties
+/android/.gradle/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+/android/key.properties
+*.jks
+*.keystore
+
+# iOS CocoaPods and generated Flutter configuration
+/ios/Pods/
+/ios/.symlinks/
+/ios/Flutter/ephemeral/
+/ios/Flutter/.last_build_id
+/ios/Flutter/Generated.xcconfig
+/ios/Flutter/flutter_export_environment.sh
+**/xcuserdata/
+*.xcuserstate

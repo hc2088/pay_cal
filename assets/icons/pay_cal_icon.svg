@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="coin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2875F0"/>
+      <stop offset="1" stop-color="#05A9DE"/>
+    </linearGradient>
+    <linearGradient id="barOne" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#83B9FF"/>
+      <stop offset="1" stop-color="#4C8FF0"/>
+    </linearGradient>
+    <linearGradient id="barTwo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#5A9DF5"/>
+      <stop offset="1" stop-color="#2674E5"/>
+    </linearGradient>
+    <linearGradient id="barThree" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#34C5E8"/>
+      <stop offset="1" stop-color="#168FD9"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" fill="#F8FBFF"/>
+  <circle cx="280" cy="270" r="184" fill="#E4F2FF"/>
+  <circle cx="280" cy="270" r="158" fill="url(#coin)"/>
+  <path d="M218 207 280 276 342 207M280 276v120M215 311h130M215 350h130" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <path d="M126 875h772" stroke="#D2E3F8" stroke-width="22" stroke-linecap="round"/>
+  <rect x="150" y="690" width="150" height="185" rx="34" fill="url(#barOne)"/>
+  <rect x="400" y="545" width="150" height="330" rx="34" fill="url(#barTwo)"/>
+  <rect x="650" y="390" width="150" height="485" rx="34" fill="url(#barThree)"/>
+
+  <path d="M225 670 465 525 720 365 846 274" fill="none" stroke="#13B9E5" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="m811 274 45-10-8 46" fill="none" stroke="#13B9E5" stroke-width="28" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="225" cy="670" r="18" fill="#FFFFFF"/>
+  <circle cx="465" cy="525" r="18" fill="#FFFFFF"/>
+  <circle cx="720" cy="365" r="18" fill="#FFFFFF"/>
+</svg>
