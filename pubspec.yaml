@@ -62,6 +62,9 @@ flutter:
 
   assets:
     - doc/薪酬算法说明.md
+    - doc/rules/special_additional_deductions.md
+    - doc/rules/housing_fund_rate.md
+    - doc/rules/work_injury_rate.md
 
   # To add assets to your application, add an assets section, like this:
   # assets:

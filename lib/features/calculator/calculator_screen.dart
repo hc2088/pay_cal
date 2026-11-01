@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,8 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../calculation/calculator_inputs.dart';
 import '../../calculation/calculation_engine.dart';
 import '../../calculation/money_format.dart';
-import 'methodology_screen.dart';
 import 'calculator_providers.dart';
+import 'methodology_screen.dart';
+import 'rule_preview_dialog.dart';
 
 const Color _navy = Color(0xFF18324B);
 const Color _teal = Color(0xFF1D9A8A);
@@ -111,6 +114,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     if (error == null && rate != null) {
       ref.read(calculatorInputsProvider.notifier).setWorkInjuryRate(rate);
     }
+  }
+
+  void _showRulePreview({required String title, required String assetPath}) {
+    FocusManager.instance.primaryFocus?.unfocus();
+    unawaited(
+      showRulePreviewDialog(context, title: title, assetPath: assetPath),
+    );
   }
 
   Future<void> _restoreDefaults() async {
@@ -345,6 +355,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   controller: _deductionController,
                   error: _errors['deduction'],
                   prefix: '¥',
+                  onInfoTap: () => _showRulePreview(
+                    title: '专项附加扣除规则',
+                    assetPath: 'doc/rules/special_additional_deductions.md',
+                  ),
                   onChanged: (String raw) {
                     _amountChanged('deduction', raw, (int cents) {
                       ref
@@ -362,6 +376,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   controller: _housingRateController,
                   error: _errors['rate'],
                   suffix: '%',
+                  onInfoTap: () => _showRulePreview(
+                    title: '住房公积金比例规则',
+                    assetPath: 'doc/rules/housing_fund_rate.md',
+                  ),
                   onChanged: _rateChanged,
                 ),
               ),
@@ -373,6 +391,10 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   controller: _workInjuryRateController,
                   error: _errors['workInjuryRate'],
                   suffix: '%',
+                  onInfoTap: () => _showRulePreview(
+                    title: '工伤保险费率规则',
+                    assetPath: 'doc/rules/work_injury_rate.md',
+                  ),
                   onChanged: _workInjuryRateChanged,
                 ),
               ),
@@ -917,6 +939,7 @@ class _Field extends StatelessWidget {
     this.error,
     this.prefix,
     this.suffix,
+    this.onInfoTap,
     this.large = false,
   });
 
@@ -927,6 +950,7 @@ class _Field extends StatelessWidget {
   final String? error;
   final String? prefix;
   final String? suffix;
+  final VoidCallback? onInfoTap;
   final bool large;
 
   @override
@@ -941,13 +965,34 @@ class _Field extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(
-            title,
-            style: const TextStyle(
-              color: _navy,
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    color: _navy,
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              if (onInfoTap != null)
+                IconButton(
+                  tooltip: '查看$title规则',
+                  onPressed: onInfoTap,
+                  icon: const Icon(Icons.info_outline_rounded),
+                  color: _teal,
+                  iconSize: 18,
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints.tightFor(
+                    width: 40,
+                    height: 40,
+                  ),
+                  splashRadius: 20,
+                ),
+            ],
           ),
           const SizedBox(height: 3),
           Text(helper, style: const TextStyle(color: _muted, fontSize: 10.5)),

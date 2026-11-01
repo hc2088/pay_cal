@@ -12,10 +12,17 @@
 
 截图由 iPhone 17 模拟器实际运行应用后截取。
 
+**可自定义参数的国家规则预览**
+
+| 工伤保险费率规则 |
+| --- |
+| <img src="screenshots/rules-dialog.png" alt="工伤保险费率国家规则弹窗" width="260"> |
+
 ## 功能
 
 - **即时薪酬测算**：编辑月税前工资、每月专项附加扣除、公积金比例和社保缴费基数，结果随输入更新。
 - **自定义工伤费率**：单位工伤保险费率可编辑，默认演示值为 0.2%。
+- **国家规则速查**：专项附加扣除、公积金比例、工伤费率旁的信息按钮可打开 Markdown 规则说明，并通过官方链接查看完整政策。
 - **便捷键盘操作**：点击页面空白区域即可收起输入键盘。
 - **灵活设置缴费基数**：社保基数可以跟随工资，也可以自定义；应用不会自动套用地区缴费上下限。
 - **查看全年或逐月结果**：查看全年汇总或选择月份，包含个税、税后现金和权益变化；跨越个税档位的月份会特别标记。
@@ -85,16 +92,20 @@ lib/
 ├── features/calculator/
 │   ├── calculator_screen.dart    # 参数输入、结果和计算拆解
 │   ├── methodology_screen.dart  # 应用内算法说明页
+│   ├── rule_preview_dialog.dart # 国家规则 Markdown 弹窗
 │   └── calculator_providers.dart
 └── main.dart
 
 doc/
 ├── 薪酬算法说明.md
+├── rules/                       # 三类可编辑参数的政策速查 Markdown
 ├── 薪酬测算Flutter产品设计文档.md
 └── 薪酬测算Flutter研发实现文档.md
 ```
 
 算法细节请阅读[薪酬算法说明](doc/薪酬算法说明.md)，产品范围和交互见[产品设计文档](doc/薪酬测算Flutter产品设计文档.md)，技术实现见[研发实现文档](doc/薪酬测算Flutter研发实现文档.md)。
+
+应用内三份规则弹窗的 Markdown 原文位于 [doc/rules](doc/rules)：[专项附加扣除](doc/rules/special_additional_deductions.md)、[住房公积金比例](doc/rules/housing_fund_rate.md)、[工伤保险费率](doc/rules/work_injury_rate.md)。
 
 ## 技术栈
 
