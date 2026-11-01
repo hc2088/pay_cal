@@ -44,12 +44,12 @@ class SavedCalculationDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             _SummaryCard(
-              title: '全年权益 A',
+              title: '全年综合到手',
               value: formatCents(calculation.annualBenefitACents),
             ),
             const SizedBox(height: 10),
             _SummaryCard(
-              title: '全年权益 B',
+              title: '全年综合到手 + 养老',
               value: formatCents(calculation.annualBenefitBCents),
             ),
             const SizedBox(height: 12),
@@ -120,7 +120,7 @@ class SavedCalculationDetailScreen extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             const Text(
-              '结果为保存时的快照，不会随当前测算参数变化。费率和当地缴费上下限可能造成实际差异。',
+              '综合到手 = 税后现金 + 双边公积金 + 个人医保入账；“+ 养老”再计入个人养老账户。这里包含账户缴存，不等于全部可立即支取。结果是保存时的快照；费率和当地缴费上下限可能造成实际差异。',
               style: TextStyle(color: _detailMuted, fontSize: 11, height: 1.5),
             ),
           ],

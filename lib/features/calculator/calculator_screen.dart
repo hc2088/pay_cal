@@ -843,7 +843,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   SizedBox(
                     width: cardWidth,
                     child: _MetricCard(
-                      label: _annualView ? '全年权益 A' : '权益 A',
+                      label: _annualView ? '全年综合到手' : '综合到手',
                       value: formatCents(benefitA),
                       icon: Icons.savings_rounded,
                       tone: _MetricTone.white,
@@ -853,11 +853,11 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   SizedBox(
                     width: cardWidth,
                     child: _MetricCard(
-                      label: _annualView ? '全年权益 B' : '权益 B',
+                      label: _annualView ? '全年综合到手 + 养老' : '综合到手 + 养老',
                       value: formatCents(benefitB),
                       icon: Icons.trending_up_rounded,
                       tone: _MetricTone.blue,
-                      helper: '权益 A + 个人养老账户',
+                      helper: '综合到手 + 个人养老账户',
                     ),
                   ),
                 ],
@@ -983,7 +983,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             style: TextStyle(color: _navy, fontWeight: FontWeight.w700),
           ),
           subtitle: Text(
-            '${annual ? '全年合计' : '$_month 月'} · 费率与权益组成',
+            '${annual ? '全年合计' : '$_month 月'} · 费率与综合到手组成',
             style: const TextStyle(color: _muted, fontSize: 11),
           ),
           children: <Widget>[
@@ -1097,7 +1097,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ),
             const SizedBox(height: 15),
             _DetailGroup(
-              title: '权益组成',
+              title: '综合到手组成',
               rows: <_DetailLine>[
                 _DetailLine(
                   '个人养老保险 · 8%',
@@ -1144,7 +1144,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       : formatRate(month.taxBracketRateBps),
                 ),
                 _DetailLine(
-                  '权益 A',
+                  '综合到手',
                   amount(result.annualBenefitACents, month.benefitACents),
                   strong: true,
                 ),
@@ -1156,7 +1156,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   ),
                 ),
                 _DetailLine(
-                  '权益 B',
+                  '综合到手 + 养老',
                   amount(result.annualBenefitBCents, month.benefitBCents),
                   strong: true,
                 ),
@@ -1584,13 +1584,13 @@ class _MonthRow extends StatelessWidget {
                   ),
                   Expanded(
                     child: _MiniAmount(
-                      label: '权益 A',
+                      label: '综合到手',
                       value: formatCents(month.benefitACents),
                     ),
                   ),
                   Expanded(
                     child: _MiniAmount(
-                      label: '权益 B',
+                      label: '综合到手 + 养老',
                       value: formatCents(month.benefitBCents),
                     ),
                   ),

@@ -198,12 +198,12 @@ class _HistoryCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: <Widget>[
                   const Text(
-                    '全年税后现金',
+                    '全年综合到手',
                     style: TextStyle(color: _historyMuted, fontSize: 10),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    formatCents(calculation.annualNetCashCents),
+                    formatCents(calculation.annualBenefitACents),
                     style: const TextStyle(
                       color: _historyTeal,
                       fontSize: 12,
