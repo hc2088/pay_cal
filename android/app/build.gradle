@@ -4,6 +4,20 @@ plugins {
     id 'dev.flutter.flutter-gradle-plugin'
 }
 
+def keystoreProperties = new Properties()
+def keystorePropertiesFile = rootProject.file('key.properties')
+if (keystorePropertiesFile.exists()) {
+    keystorePropertiesFile.withInputStream { keystoreProperties.load(it) }
+}
+def releaseKeystorePath = keystoreProperties.getProperty('storeFile')
+def releaseKeystoreFile = releaseKeystorePath ? rootProject.file(releaseKeystorePath) : null
+def hasReleaseSigning = releaseKeystoreFile?.isFile() &&
+        ['storePassword', 'keyPassword', 'keyAlias'].every { keystoreProperties.getProperty(it)?.trim() }
+
+if (!hasReleaseSigning) {
+    logger.lifecycle('No release keystore configured; signing the release APK with the debug key for local use.')
+}
+
 android {
     namespace 'com.example.pay_cal'
     compileSdkVersion flutter.compileSdkVersion
@@ -30,9 +44,24 @@ android {
         versionName flutter.versionName
     }
 
+    signingConfigs {
+        release {
+            if (hasReleaseSigning) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile releaseKeystoreFile
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
+            if (hasReleaseSigning) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
         }
     }
 }

@@ -1,0 +1,6 @@
+# Copy this file to key.properties and fill in your own values for distribution builds.
+# Never commit your real key.properties file or keystore.
+storePassword=replace-with-your-store-password
+keyPassword=replace-with-your-key-password
+keyAlias=your-key-alias
+storeFile=app/your-release-key.jks

@@ -93,6 +93,14 @@ fvm flutter pub get
 fvm flutter run
 ```
 
+### 构建 Android APK
+
+```bash
+flutter build apk --release
+```
+
+未配置个人发布密钥时，项目会使用 Android debug 密钥签名，生成可安装的本地体验 APK；如果要正式发布，请使用自己的 keystore，并参照 [`android/key.properties.example`](android/key.properties.example) 配置本机的 `android/key.properties`。真实 keystore 和密码不会提交到仓库。
+
 ## 项目结构
 
 ```text
