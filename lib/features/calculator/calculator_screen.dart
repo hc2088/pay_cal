@@ -153,38 +153,42 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final CalculationResult result = ref.watch(calculationProvider);
     return Scaffold(
       backgroundColor: _page,
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (BuildContext context, BoxConstraints constraints) {
-            final double maxWidth = constraints.maxWidth > 900
-                ? 860
-                : constraints.maxWidth;
-            return Align(
-              alignment: Alignment.topCenter,
-              child: SizedBox(
-                width: maxWidth,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 34),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      _header(),
-                      const SizedBox(height: 20),
-                      _parameters(inputs, maxWidth - 40),
-                      const SizedBox(height: 22),
-                      _results(inputs, result),
-                      const SizedBox(height: 18),
-                      _monthsCard(result),
-                      const SizedBox(height: 14),
-                      _calculationDetails(inputs, result),
-                      const SizedBox(height: 14),
-                      _disclaimer(),
-                    ],
+      body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () => FocusScope.of(context).unfocus(),
+        child: SafeArea(
+          child: LayoutBuilder(
+            builder: (BuildContext context, BoxConstraints constraints) {
+              final double maxWidth = constraints.maxWidth > 900
+                  ? 860
+                  : constraints.maxWidth;
+              return Align(
+                alignment: Alignment.topCenter,
+                child: SizedBox(
+                  width: maxWidth,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 34),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        _header(),
+                        const SizedBox(height: 20),
+                        _parameters(inputs, maxWidth - 40),
+                        const SizedBox(height: 22),
+                        _results(inputs, result),
+                        const SizedBox(height: 18),
+                        _monthsCard(result),
+                        const SizedBox(height: 14),
+                        _calculationDetails(inputs, result),
+                        const SizedBox(height: 14),
+                        _disclaimer(),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
