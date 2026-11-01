@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'calculation/calculator_inputs.dart';
+import 'calculation/saved_calculation.dart';
+import 'data/calculation_history_repository.dart';
 import 'data/calculator_settings_repository.dart';
 import 'features/calculator/calculator_providers.dart';
 import 'features/calculator/calculator_screen.dart';
@@ -10,13 +12,20 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final CalculatorSettingsRepository repository =
       CalculatorSettingsRepository();
+  final CalculationHistoryRepository historyRepository =
+      CalculationHistoryRepository();
   final CalculatorInputs initialInputs = await repository.load();
+  final List<SavedCalculation> initialHistory = await historyRepository.load();
 
   runApp(
     ProviderScope(
       overrides: [
         settingsRepositoryProvider.overrideWithValue(repository),
         initialInputsProvider.overrideWithValue(initialInputs),
+        calculationHistoryRepositoryProvider.overrideWithValue(
+          historyRepository,
+        ),
+        initialCalculationHistoryProvider.overrideWithValue(initialHistory),
       ],
       child: const SalaryCalculatorApp(),
     ),

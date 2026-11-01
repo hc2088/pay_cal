@@ -7,7 +7,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../calculation/calculator_inputs.dart';
 import '../../calculation/calculation_engine.dart';
 import '../../calculation/money_format.dart';
+import '../../calculation/saved_calculation.dart';
 import 'calculator_providers.dart';
+import 'calculation_history_screen.dart';
 import 'methodology_screen.dart';
 import 'rule_preview_dialog.dart';
 
@@ -28,12 +30,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   late final TextEditingController _salaryController;
   late final TextEditingController _deductionController;
   late final TextEditingController _socialBaseController;
+  late final TextEditingController _housingBaseController;
   late final TextEditingController _housingRateController;
   late final TextEditingController _workInjuryRateController;
   final Map<String, String?> _errors = <String, String?>{
     'salary': null,
     'deduction': null,
     'social': null,
+    'housingBase': null,
     'rate': null,
     'workInjuryRate': null,
   };
@@ -56,6 +60,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _socialBaseController = TextEditingController(
       text: formatEditableCents(inputs.socialBaseCents),
     );
+    _housingBaseController = TextEditingController(
+      text: formatEditableCents(inputs.housingFundBaseCents),
+    );
     _housingRateController = TextEditingController(
       text: formatEditableCents(inputs.housingFundRateBps),
     );
@@ -69,6 +76,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _salaryController.dispose();
     _deductionController.dispose();
     _socialBaseController.dispose();
+    _housingBaseController.dispose();
     _housingRateController.dispose();
     _workInjuryRateController.dispose();
     super.dispose();
@@ -116,6 +124,14 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     }
   }
 
+  void _housingBaseChanged(String raw) {
+    _amountChanged('housingBase', raw, (int cents) {
+      ref
+          .read(calculatorInputsProvider.notifier)
+          .setCustomHousingFundBase(cents);
+    });
+  }
+
   void _showRulePreview({required String title, required String assetPath}) {
     FocusManager.instance.primaryFocus?.unfocus();
     unawaited(
@@ -128,7 +144,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: const Text('恢复默认参数？'),
-        content: const Text('工资、扣除额、缴费比例和社保基数将恢复初始值。'),
+        content: const Text('工资、扣除额、缴费比例及社保、公积金基数设置将恢复初始值。'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -153,6 +169,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
       defaults.specialAdditionalDeductionCents,
     );
     _socialBaseController.text = formatEditableCents(defaults.socialBaseCents);
+    _housingBaseController.text = formatEditableCents(
+      defaults.housingFundBaseCents,
+    );
     _housingRateController.text = formatEditableCents(
       defaults.housingFundRateBps,
     );
@@ -180,10 +199,66 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     setState(() => _errors['social'] = null);
   }
 
+  void _makeHousingBaseCustom() {
+    final CalculatorInputs inputs = ref.read(calculatorInputsProvider);
+    _housingBaseController.text = formatEditableCents(
+      inputs.housingFundBaseCents,
+    );
+    ref
+        .read(calculatorInputsProvider.notifier)
+        .setCustomHousingFundBase(inputs.housingFundBaseCents);
+    setState(() => _errors['housingBase'] = null);
+  }
+
+  void _makeHousingBaseFollowSocial() {
+    ref
+        .read(calculatorInputsProvider.notifier)
+        .followSocialBaseForHousingFund();
+    setState(() => _errors['housingBase'] = null);
+  }
+
+  Future<void> _saveCurrentCalculation(
+    CalculatorInputs inputs,
+    CalculationResult result,
+  ) async {
+    if (_invalidDraft) {
+      return;
+    }
+    FocusManager.instance.primaryFocus?.unfocus();
+    try {
+      await ref
+          .read(calculationHistoryProvider.notifier)
+          .saveCalculation(inputs, result);
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('本次测算已保存，可在历史记录中查看。')));
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('保存失败，请检查设备存储空间后重试。')));
+      }
+    }
+  }
+
+  void _openCalculationHistory() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => const CalculationHistoryScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final CalculatorInputs inputs = ref.watch(calculatorInputsProvider);
     final CalculationResult result = ref.watch(calculationProvider);
+    final List<SavedCalculation> history = ref.watch(
+      calculationHistoryProvider,
+    );
     return Scaffold(
       backgroundColor: _page,
       body: GestureDetector(
@@ -206,7 +281,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       children: <Widget>[
                         _header(),
                         const SizedBox(height: 20),
-                        _parameters(inputs, maxWidth - 40),
+                        _parameters(inputs, maxWidth - 40, history.length),
                         const SizedBox(height: 22),
                         _results(inputs, result),
                         const SizedBox(height: 18),
@@ -309,7 +384,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     );
   }
 
-  Widget _parameters(CalculatorInputs inputs, double width) {
+  Widget _parameters(CalculatorInputs inputs, double width, int historyCount) {
     final bool twoColumns = width >= 540;
     final double half = twoColumns ? (width - 12) / 2 : width;
     return _Card(
@@ -329,6 +404,43 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ],
           ),
           const SizedBox(height: 18),
+          Row(
+            children: <Widget>[
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: _invalidDraft
+                      ? null
+                      : () => _saveCurrentCalculation(
+                          inputs,
+                          ref.read(calculationProvider),
+                        ),
+                  icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+                  label: const Text('保存本次'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: _navy,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(0, 42),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _openCalculationHistory,
+                  icon: const Icon(Icons.history_rounded, size: 18),
+                  label: Text('历史记录 $historyCount'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _teal,
+                    side: const BorderSide(color: _line),
+                    minimumSize: const Size(0, 42),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
           _Field(
             title: '月税前工资',
             helper: '按固定月薪测算全年',
@@ -399,6 +511,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 ),
               ),
               SizedBox(width: width, child: _socialBaseField(inputs)),
+              SizedBox(width: width, child: _housingFundBaseField(inputs)),
             ],
           ),
         ],
@@ -488,6 +601,131 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   style: TextStyle(color: _muted, fontSize: 10.5),
                 ),
               ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _housingFundBaseField(CalculatorInputs inputs) {
+    final bool custom =
+        inputs.housingFundBaseMode == HousingFundBaseMode.custom;
+    final String source = inputs.socialBaseMode == SocialBaseMode.custom
+        ? '自定义社保基数'
+        : '税前工资对应的社保基数';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F9FC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      '住房公积金缴存基数',
+                      style: TextStyle(
+                        color: _navy,
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    SizedBox(height: 3),
+                    Text(
+                      '默认跟随社保基数，可单独自定义',
+                      style: TextStyle(color: _muted, fontSize: 10.5),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                tooltip: '查看住房公积金缴存基数规则',
+                onPressed: () => _showRulePreview(
+                  title: '住房公积金缴存基数规则',
+                  assetPath: 'doc/rules/housing_fund_base.md',
+                ),
+                icon: const Icon(Icons.info_outline_rounded),
+                color: _teal,
+                iconSize: 18,
+                padding: EdgeInsets.zero,
+                visualDensity: VisualDensity.compact,
+                constraints: const BoxConstraints.tightFor(
+                  width: 40,
+                  height: 40,
+                ),
+                splashRadius: 20,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: <Widget>[
+              _ModeChip(
+                label: '跟随社保基数',
+                selected: !custom,
+                onTap: _makeHousingBaseFollowSocial,
+              ),
+              _ModeChip(
+                label: '自定义',
+                selected: custom,
+                onTap: _makeHousingBaseCustom,
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          if (custom)
+            _Field(
+              title: '自定义公积金缴存基数',
+              helper: '不随社保基数变化；按实际核定金额填写',
+              controller: _housingBaseController,
+              error: _errors['housingBase'],
+              prefix: '¥',
+              onChanged: _housingBaseChanged,
+            )
+          else
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: _line),
+              ),
+              child: Row(
+                children: <Widget>[
+                  const Icon(Icons.link_rounded, color: _teal, size: 17),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          '当前公积金基数  ${formatCents(inputs.housingFundBaseCents)}',
+                          style: const TextStyle(
+                            color: _navy,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '联动来源：$source',
+                          style: const TextStyle(color: _muted, fontSize: 10.5),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
         ],
       ),
@@ -761,6 +999,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   amount(month.socialBaseCents * 12, month.socialBaseCents),
                 ),
                 _DetailLine(
+                  inputs.housingFundBaseMode ==
+                          HousingFundBaseMode.followSocialBase
+                      ? '月公积金基数 · 跟随社保'
+                      : '月公积金基数 · 自定义',
+                  amount(
+                    inputs.housingFundBaseCents,
+                    inputs.housingFundBaseCents,
+                  ),
+                ),
+                _DetailLine(
                   '个人扣款合计',
                   amount(
                     sum((m) => m.personalDeductionTotalCents),
@@ -873,7 +1121,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   ),
                 ),
                 _DetailLine(
-                  '双边公积金',
+                  '双边公积金 · 基数 ${formatCents(inputs.housingFundBaseCents)}',
                   amount(
                     result.annualEmployeeHousingFundCents +
                         result.annualEmployerHousingFundCents,
@@ -1469,16 +1717,15 @@ class _DetailLine {
 }
 
 class _Card extends StatelessWidget {
-  const _Card({required this.child, this.padding = const EdgeInsets.all(17)});
+  const _Card({required this.child});
 
   final Widget child;
-  final EdgeInsets padding;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: padding,
+      padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(21),

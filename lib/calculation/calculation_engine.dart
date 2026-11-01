@@ -164,7 +164,7 @@ class CalculationEngine {
         inputs.workInjuryRateBps,
       );
       final int employerHousingFund = _percentage(
-        inputs.grossMonthlySalaryCents,
+        inputs.housingFundBaseCents,
         inputs.housingFundRateBps,
       );
 
@@ -172,7 +172,7 @@ class CalculationEngine {
       final int employeeMedical = _percentage(socialBase, 200);
       final int employeeUnemployment = _percentage(socialBase, 50);
       final int employeeHousingFund = _percentage(
-        inputs.grossMonthlySalaryCents,
+        inputs.housingFundBaseCents,
         inputs.housingFundRateBps,
       );
 

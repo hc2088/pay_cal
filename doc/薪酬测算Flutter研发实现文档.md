@@ -26,7 +26,7 @@
 | 本地设置 | SharedPreferences，保存带 schemaVersion 的 JSON |
 | 日期与本地化格式 | intl；金额运算不依赖 intl |
 | 金额运算 | 整数分 + 整数基点；不使用 double 计算最终金额 |
-| 路由 | 单页 MVP 暂不需要路由库 |
+| 路由 | 使用 Flutter `MaterialPageRoute` 进入历史列表和结果概览，不额外引入路由库 |
 
 依赖保持精简。计算税表、费率、结果模型和格式逻辑使用 Dart 标准类型实现。
 
@@ -36,8 +36,8 @@
 |---|---|---|
 | 应用层 | 主题、启动、Provider 初始化 | lib/app/ |
 | 计算领域层 | Money、Rate、默认参数、税表、计算引擎、结果模型 | lib/calculation/ |
-| 功能界面层 | 参数表单、四项指标、月度明细、计算依据 | lib/features/calculator/ |
-| 数据层 | 参数序列化、本地读取与保存 | lib/data/ |
+| 功能界面层 | 参数表单、四项指标、月度明细、历史列表和保存结果概览 | lib/features/calculator/ |
+| 数据层 | 参数和历史快照序列化、本地读取与保存 | lib/data/ |
 | 通用组件 | 金额输入、指标卡、提示组件 | lib/core/widgets/ |
 
 依赖方向为：界面层调用领域层，数据层只负责配置的读写。领域层不得导入 Flutter、Widget 或本地存储库。
@@ -50,6 +50,7 @@
 4. Provider 调用纯函数 CalculationEngine.calculate(inputs)。
 5. 结果模型刷新 UI，同时异步保存有效输入。
 6. 输入无效时显示字段提示，并标记结果不可代表当前编辑草稿；不得让用户误以为旧结果对应未提交的新输入。
+7. 用户点击“保存本次”时，将当前有效输入、规则版本和年度结果摘要作为不可变快照保存到本地历史；历史详情只读取快照，不跟随当前参数变化。
 
 ## 4. 数值约定
 
@@ -83,6 +84,8 @@
 | 月专项附加扣除 | 500,000 分 |
 | 社保基数模式 | 跟随工资 |
 | 自定义社保基数 | 空；仅 custom 模式使用 |
+| 公积金基数模式 | 跟随当前社保基数 |
+| 自定义公积金基数 | 空；仅 custom 模式使用 |
 | 公积金比例 | 1,200 基点 |
 | 工伤保险费率 | 20 基点（0.2%），可编辑 |
 | 基本减除费用 | 500,000 分/月 |
@@ -98,7 +101,7 @@
 | 工伤保险 | 用户输入；默认 20 | 0 |
 | 住房公积金 | 用户比例 | 用户比例 |
 
-社保统一使用社保基数 S。公积金基数首版固定跟随税前工资 A。工伤保险费率为用户输入，其余费率和税表由规则配置提供，计算结果记录 rulesVersion。
+社保统一使用社保基数 S。公积金基数 H 默认跟随当前社保基数 S，也允许单独自定义。工伤保险费率为用户输入，其余费率和税表由规则配置提供，计算结果记录 rulesVersion。
 
 ## 6. 数据模型
 
@@ -112,6 +115,8 @@
 | specialAdditionalDeductionCents | int，月专项附加扣除 |
 | socialBaseMode | enum，followSalary 或 custom |
 | customSocialBaseCents | int?，自定义社保基数 |
+| housingFundBaseMode | enum，followSocialBase 或 custom |
+| customHousingFundBaseCents | int?，自定义公积金缴存基数 |
 | housingFundRateBps | int，单位和个人统一比例 |
 | workInjuryRateBps | int，单位工伤保险费率；默认 20 基点（0.2%） |
 | schemaVersion | int，本地存储结构版本 |
@@ -137,7 +142,7 @@
 
 ### 6.3 CalculationResult
 
-保存本次输入快照、rulesVersion、12 项 MonthlyCalculationResult，以及各指标年度合计。结果可从快照重算；不需要将派生结果持久化。
+`CalculationResult` 在运行时包含本次输入、rulesVersion、12 项 MonthlyCalculationResult，以及各指标年度合计。历史记录单独持久化输入快照和年度结果摘要，详情页不依赖当前计算结果。
 
 ## 7. 计算引擎契约
 
@@ -149,11 +154,11 @@ CalculationResult calculate(CalculatorInputs inputs, TaxAndContributionRules rul
 
 ### 7.1 每月缴费计算
 
-令 A 为月税前工资，S 为本月社保基数，r 为公积金基点比例：
+令 A 为月税前工资，S 为本月社保基数，H 为本月公积金缴存基数，r 为公积金基点比例：
 
 - 单位养老 = S × 16%；单位医疗 = S × 9.8%；单位失业 = S × 0.5%；单位工伤 = S × w，其中 w 为可编辑工伤费率，默认 0.2%。
 - 个人养老 = S × 8%；个人医疗 = S × 2%；个人失业 = S × 0.5%。
-- 单位公积金 = A × r；个人公积金 = A × r。
+- 单位公积金 = H × r；个人公积金 = H × r。
 - 单位成本 = A + 单位各项社保 + 单位公积金。
 - 个人扣款总额 = 个人各项社保 + 个人公积金 + 3 元。
 
@@ -217,6 +222,15 @@ CalculationResult calculate(CalculatorInputs inputs, TaxAndContributionRules rul
 - 用户点击恢复默认时重置工资、专项扣除、公积金比例和基数模式。
 - 不实现网络请求；薪酬数据不进入日志、分析事件或崩溃上报。
 
+### 8.1 历史测算
+
+- 使用独立的 SharedPreferences 字符串列表键 `salary_calculator.history.v1`，与当前参数设置分开保存。
+- 每条记录包含 schemaVersion、唯一 ID、保存时间、CalculatorInputs 快照、rulesVersion 及单位成本、税后现金、权益、税额和公积金年度合计。
+- App 启动时加载历史记录，跳过格式错误的单条数据并按保存时间倒序展示。
+- 保存、单条删除和清空全部均先更新界面状态，再异步写入本地；写入失败时恢复原状态并提示用户。
+- 列表中的删除按钮和“清空”入口均弹出确认框；清空完成后显示空状态。
+- 历史详情从所选快照展示结果与测算参数，不调用当前计算器输入覆盖快照。
+
 ## 9. 状态管理与 UI 实现
 
 推荐的状态分层：
@@ -231,9 +245,11 @@ CalculationResult calculate(CalculatorInputs inputs, TaxAndContributionRules rul
 
 首版页面包括参数卡片、四项结果卡片、全年/月份选择、可折叠的月度拆解卡片、计算依据展开区和测算说明。月度拆解在收起时展示全年或当前所选月份的摘要，展开后列出 12 个月的税额、税后现金、权益和税档；点击月份行切换到对应的月度结果。工伤保险费率在参数区提供独立百分比输入，默认 0.2%；修改后立即重算单位工伤缴费和单位总成本。专项附加扣除、公积金比例和工伤费率标题旁提供信息按钮，点按后以 Markdown 弹窗预览随包提供的国家规则文件；文档中的 http/https 链接调用系统浏览器打开。小屏两列或单列布局，所有输入控件提供语义标签。
 
-工伤费率以基点存储并随其他用户输入本地持久化；加载旧版 schemaVersion 1 设置时，若缺少该字段则回退到默认值 20 基点。
+参数卡片提供“保存本次”和“历史记录 N”两个入口；保存按钮在输入草稿无效时禁用。历史列表提供单条删除和清空全部确认，点击记录进入只读的结果概览页。
 
-规则文档以 Flutter assets 打包：`doc/rules/special_additional_deductions.md`、`doc/rules/housing_fund_rate.md`、`doc/rules/work_injury_rate.md`。弹窗通过 `rootBundle.loadString` 读取，支持滚动 Markdown 预览及打开官方链接。
+工伤费率以基点存储并随其他用户输入本地持久化；加载旧版 schemaVersion 1 设置时，若缺少该字段则回退到默认值 20 基点。schemaVersion 1 和 2 设置迁移后，新增的公积金基数模式默认为跟随社保基数。
+
+规则文档以 Flutter assets 打包：专项附加扣除、公积金比例、公积金基数和工伤保险费率四份 Markdown 文件。弹窗通过 `rootBundle.loadString` 读取，支持滚动预览及打开官方链接。
 
 ## 10. 错误处理与输入限制
 
@@ -266,6 +282,10 @@ CalculationResult calculate(CalculatorInputs inputs, TaxAndContributionRules rul
 - 修改公积金比例后四项核心指标与拆解值同步。
 - 修改工伤保险费率后单位工伤缴费和单位成本同步；个人扣款不变。
 - 专项附加扣除、公积金比例、工伤费率的信息按钮分别加载对应规则 Markdown；规则文件可离线预览，官方链接可在联网时打开。
+- 公积金基数跟随/自定义模式持久化正确；跟随时使用当前社保基数，自定义时不再随工资或社保基数更新，缴费结果使用该公积金基数。
+- 历史测算可持久化有效参数和结果快照；列表倒序显示，点击条目打开详情，详情金额与保存时一致。
+- 单条删除、清空全部及取消确认行为正确；存储写入失败时恢复原历史状态并提示。
+- schemaVersion 1/2 的存量设置可读取，新增公积金基数默认进入跟随社保模式；schemaVersion 3 持久化两种模式及自定义金额。
 - 全年/月度切换和月份选择正确。
 - 输入无效时显示字段提示且不展示误导性旧结果。
 
