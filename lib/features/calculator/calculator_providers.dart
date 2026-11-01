@@ -29,10 +29,10 @@ final calculationProvider = Provider<CalculationResult>((ref) {
 });
 
 class CalculatorInputsController extends StateNotifier<CalculatorInputs> {
-  CalculatorInputsController(this._initial, this._repository) : super(_initial);
+  CalculatorInputsController(CalculatorInputs initial, this._repository)
+    : super(initial);
 
   final CalculatorSettingsRepository _repository;
-  final CalculatorInputs _initial;
   Timer? _saveTimer;
 
   void setSalary(int cents) {
@@ -47,6 +47,10 @@ class CalculatorInputsController extends StateNotifier<CalculatorInputs> {
     _replace(state.withHousingFundRate(basisPoints));
   }
 
+  void setWorkInjuryRate(int basisPoints) {
+    _replace(state.withWorkInjuryRate(basisPoints));
+  }
+
   void setCustomSocialBase(int cents) {
     _replace(state.withCustomSocialBase(cents));
   }
@@ -56,7 +60,7 @@ class CalculatorInputsController extends StateNotifier<CalculatorInputs> {
   }
 
   void restoreDefaults() {
-    _replace(_initial);
+    _replace(CalculatorInputs.defaults());
   }
 
   void _replace(CalculatorInputs next) {

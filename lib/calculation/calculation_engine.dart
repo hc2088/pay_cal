@@ -159,7 +159,10 @@ class CalculationEngine {
       final int employerPension = _percentage(socialBase, 1600);
       final int employerMedical = _percentage(socialBase, 980);
       final int employerUnemployment = _percentage(socialBase, 50);
-      final int employerWorkInjury = _percentage(socialBase, 50);
+      final int employerWorkInjury = _percentage(
+        socialBase,
+        inputs.workInjuryRateBps,
+      );
       final int employerHousingFund = _percentage(
         inputs.grossMonthlySalaryCents,
         inputs.housingFundRateBps,

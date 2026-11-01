@@ -26,11 +26,13 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   late final TextEditingController _deductionController;
   late final TextEditingController _socialBaseController;
   late final TextEditingController _housingRateController;
+  late final TextEditingController _workInjuryRateController;
   final Map<String, String?> _errors = <String, String?>{
     'salary': null,
     'deduction': null,
     'social': null,
     'rate': null,
+    'workInjuryRate': null,
   };
   bool _annualView = true;
   int _month = 1;
@@ -54,6 +56,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _housingRateController = TextEditingController(
       text: formatEditableCents(inputs.housingFundRateBps),
     );
+    _workInjuryRateController = TextEditingController(
+      text: formatEditableCents(inputs.workInjuryRateBps),
+    );
   }
 
   @override
@@ -62,6 +67,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _deductionController.dispose();
     _socialBaseController.dispose();
     _housingRateController.dispose();
+    _workInjuryRateController.dispose();
     super.dispose();
   }
 
@@ -93,12 +99,26 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     }
   }
 
+  void _workInjuryRateChanged(String raw) {
+    final int? rate = parseRateBasisPoints(raw);
+    String? error;
+    if (rate == null) {
+      error = raw.trim().isEmpty ? '请输入比例' : '最多输入两位小数';
+    } else if (rate > 10000) {
+      error = '比例需在 0%–100% 之间';
+    }
+    setState(() => _errors['workInjuryRate'] = error);
+    if (error == null && rate != null) {
+      ref.read(calculatorInputsProvider.notifier).setWorkInjuryRate(rate);
+    }
+  }
+
   Future<void> _restoreDefaults() async {
     final bool? confirmed = await showDialog<bool>(
       context: context,
       builder: (BuildContext context) => AlertDialog(
         title: const Text('恢复默认参数？'),
-        content: const Text('工资、扣除额、公积金比例和社保基数将恢复初始值。'),
+        content: const Text('工资、扣除额、缴费比例和社保基数将恢复初始值。'),
         actions: <Widget>[
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -125,6 +145,9 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     _socialBaseController.text = formatEditableCents(defaults.socialBaseCents);
     _housingRateController.text = formatEditableCents(
       defaults.housingFundRateBps,
+    );
+    _workInjuryRateController.text = formatEditableCents(
+      defaults.workInjuryRateBps,
     );
     setState(() {
       _errors.updateAll((String key, String? value) => null);
@@ -340,6 +363,17 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   error: _errors['rate'],
                   suffix: '%',
                   onChanged: _rateChanged,
+                ),
+              ),
+              SizedBox(
+                width: half,
+                child: _Field(
+                  title: '工伤保险费率',
+                  helper: '单位承担，默认 0.2%',
+                  controller: _workInjuryRateController,
+                  error: _errors['workInjuryRate'],
+                  suffix: '%',
+                  onChanged: _workInjuryRateChanged,
                 ),
               ),
               SizedBox(width: width, child: _socialBaseField(inputs)),
@@ -768,7 +802,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   ),
                 ),
                 _DetailLine(
-                  '单位工伤保险 · 0.5%',
+                  '单位工伤保险 · ${formatRate(inputs.workInjuryRateBps)}',
                   amount(
                     sum((m) => m.employerWorkInjuryCents),
                     month.employerWorkInjuryCents,

@@ -1,6 +1,7 @@
 enum SocialBaseMode { followSalary, custom }
 
 const int maxInputCents = 99999999999;
+const int defaultWorkInjuryRateBps = 20;
 
 class CalculatorInputs {
   const CalculatorInputs({
@@ -9,6 +10,7 @@ class CalculatorInputs {
     required this.socialBaseMode,
     required this.customSocialBaseCents,
     required this.housingFundRateBps,
+    required this.workInjuryRateBps,
   });
 
   factory CalculatorInputs.defaults() {
@@ -18,6 +20,7 @@ class CalculatorInputs {
       socialBaseMode: SocialBaseMode.followSalary,
       customSocialBaseCents: null,
       housingFundRateBps: 1200,
+      workInjuryRateBps: defaultWorkInjuryRateBps,
     );
   }
 
@@ -26,6 +29,7 @@ class CalculatorInputs {
   final SocialBaseMode socialBaseMode;
   final int? customSocialBaseCents;
   final int housingFundRateBps;
+  final int workInjuryRateBps;
 
   int get socialBaseCents => socialBaseMode == SocialBaseMode.followSalary
       ? grossMonthlySalaryCents
@@ -38,6 +42,7 @@ class CalculatorInputs {
       socialBaseMode: socialBaseMode,
       customSocialBaseCents: customSocialBaseCents,
       housingFundRateBps: housingFundRateBps,
+      workInjuryRateBps: workInjuryRateBps,
     );
   }
 
@@ -48,6 +53,7 @@ class CalculatorInputs {
       socialBaseMode: socialBaseMode,
       customSocialBaseCents: customSocialBaseCents,
       housingFundRateBps: housingFundRateBps,
+      workInjuryRateBps: workInjuryRateBps,
     );
   }
 
@@ -58,6 +64,18 @@ class CalculatorInputs {
       socialBaseMode: socialBaseMode,
       customSocialBaseCents: customSocialBaseCents,
       housingFundRateBps: value,
+      workInjuryRateBps: workInjuryRateBps,
+    );
+  }
+
+  CalculatorInputs withWorkInjuryRate(int value) {
+    return CalculatorInputs(
+      grossMonthlySalaryCents: grossMonthlySalaryCents,
+      specialAdditionalDeductionCents: specialAdditionalDeductionCents,
+      socialBaseMode: socialBaseMode,
+      customSocialBaseCents: customSocialBaseCents,
+      housingFundRateBps: housingFundRateBps,
+      workInjuryRateBps: value,
     );
   }
 
@@ -68,6 +86,7 @@ class CalculatorInputs {
       socialBaseMode: SocialBaseMode.custom,
       customSocialBaseCents: value,
       housingFundRateBps: housingFundRateBps,
+      workInjuryRateBps: workInjuryRateBps,
     );
   }
 
@@ -78,22 +97,25 @@ class CalculatorInputs {
       socialBaseMode: SocialBaseMode.followSalary,
       customSocialBaseCents: null,
       housingFundRateBps: housingFundRateBps,
+      workInjuryRateBps: workInjuryRateBps,
     );
   }
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'schemaVersion': 1,
+      'schemaVersion': 2,
       'grossMonthlySalaryCents': grossMonthlySalaryCents,
       'specialAdditionalDeductionCents': specialAdditionalDeductionCents,
       'socialBaseMode': socialBaseMode.name,
       'customSocialBaseCents': customSocialBaseCents,
       'housingFundRateBps': housingFundRateBps,
+      'workInjuryRateBps': workInjuryRateBps,
     };
   }
 
   factory CalculatorInputs.fromJson(Map<String, dynamic> json) {
-    if (json['schemaVersion'] != 1) {
+    final int schemaVersion = json['schemaVersion'] as int;
+    if (schemaVersion != 1 && schemaVersion != 2) {
       throw const FormatException('Unsupported settings version');
     }
 
@@ -104,12 +126,16 @@ class CalculatorInputs {
     final salary = json['grossMonthlySalaryCents'] as int;
     final deduction = json['specialAdditionalDeductionCents'] as int;
     final rate = json['housingFundRateBps'] as int;
+    final workInjuryRate =
+        json['workInjuryRateBps'] as int? ?? defaultWorkInjuryRateBps;
     final customBase = json['customSocialBaseCents'] as int?;
 
     if (!_validMoney(salary) ||
         !_validMoney(deduction) ||
         rate < 0 ||
         rate > 10000 ||
+        workInjuryRate < 0 ||
+        workInjuryRate > 10000 ||
         (customBase != null && !_validMoney(customBase)) ||
         (mode == SocialBaseMode.custom && customBase == null)) {
       throw const FormatException('Invalid calculator settings');
@@ -121,6 +147,7 @@ class CalculatorInputs {
       socialBaseMode: mode,
       customSocialBaseCents: customBase,
       housingFundRateBps: rate,
+      workInjuryRateBps: workInjuryRate,
     );
   }
 
