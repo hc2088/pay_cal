@@ -2,6 +2,12 @@ import 'calculator_inputs.dart';
 
 const int basicDeductionCents = 500000;
 const int criticalIllnessCents = 300;
+const int employerPensionRateBps = 1600;
+const int employerMedicalRateBps = 980;
+const int employerUnemploymentRateBps = 50;
+const int employeePensionRateBps = 800;
+const int employeeMedicalRateBps = 200;
+const int employeeUnemploymentRateBps = 50;
 
 class TaxBracket {
   const TaxBracket({
@@ -110,6 +116,75 @@ class MonthlyCalculationResult {
 
   int get employeeSocialTotalCents =>
       employeePensionCents + employeeMedicalCents + employeeUnemploymentCents;
+
+  Map<String, Object?> toJson() => <String, Object?>{
+    'month': month,
+    'salaryCents': salaryCents,
+    'socialBaseCents': socialBaseCents,
+    'employerPensionCents': employerPensionCents,
+    'employerMedicalCents': employerMedicalCents,
+    'employerUnemploymentCents': employerUnemploymentCents,
+    'employerWorkInjuryCents': employerWorkInjuryCents,
+    'employerHousingFundCents': employerHousingFundCents,
+    'employeePensionCents': employeePensionCents,
+    'employeeMedicalCents': employeeMedicalCents,
+    'employeeUnemploymentCents': employeeUnemploymentCents,
+    'employeeHousingFundCents': employeeHousingFundCents,
+    'criticalIllnessCents': criticalIllnessCents,
+    'personalDeductionTotalCents': personalDeductionTotalCents,
+    'taxableIncomeIncrementCents': taxableIncomeIncrementCents,
+    'cumulativeTaxableIncomeCents': cumulativeTaxableIncomeCents,
+    'taxBracketRateBps': taxBracketRateBps,
+    'quickDeductionCents': quickDeductionCents,
+    'cumulativeTaxDueCents': cumulativeTaxDueCents,
+    'monthlyTaxCents': monthlyTaxCents,
+    'netCashCents': netCashCents,
+    'benefitACents': benefitACents,
+    'benefitBCents': benefitBCents,
+    'employerTotalCostCents': employerTotalCostCents,
+  };
+
+  factory MonthlyCalculationResult.fromJson(Map<String, dynamic> json) {
+    int read(String key) {
+      final Object? value = json[key];
+      if (value is! int || value < 0) {
+        throw FormatException('Invalid saved monthly result value: $key');
+      }
+      return value;
+    }
+
+    final int month = read('month');
+    final int taxBracketRateBps = read('taxBracketRateBps');
+    if (month < 1 || month > 12 || taxBracketRateBps > 10000) {
+      throw const FormatException('Invalid saved monthly result');
+    }
+    return MonthlyCalculationResult(
+      month: month,
+      salaryCents: read('salaryCents'),
+      socialBaseCents: read('socialBaseCents'),
+      employerPensionCents: read('employerPensionCents'),
+      employerMedicalCents: read('employerMedicalCents'),
+      employerUnemploymentCents: read('employerUnemploymentCents'),
+      employerWorkInjuryCents: read('employerWorkInjuryCents'),
+      employerHousingFundCents: read('employerHousingFundCents'),
+      employeePensionCents: read('employeePensionCents'),
+      employeeMedicalCents: read('employeeMedicalCents'),
+      employeeUnemploymentCents: read('employeeUnemploymentCents'),
+      employeeHousingFundCents: read('employeeHousingFundCents'),
+      criticalIllnessCents: read('criticalIllnessCents'),
+      personalDeductionTotalCents: read('personalDeductionTotalCents'),
+      taxableIncomeIncrementCents: read('taxableIncomeIncrementCents'),
+      cumulativeTaxableIncomeCents: read('cumulativeTaxableIncomeCents'),
+      taxBracketRateBps: taxBracketRateBps,
+      quickDeductionCents: read('quickDeductionCents'),
+      cumulativeTaxDueCents: read('cumulativeTaxDueCents'),
+      monthlyTaxCents: read('monthlyTaxCents'),
+      netCashCents: read('netCashCents'),
+      benefitACents: read('benefitACents'),
+      benefitBCents: read('benefitBCents'),
+      employerTotalCostCents: read('employerTotalCostCents'),
+    );
+  }
 }
 
 class CalculationResult {
@@ -156,9 +231,18 @@ class CalculationEngine {
     final int socialBase = inputs.socialBaseCents;
 
     for (int month = 1; month <= 12; month++) {
-      final int employerPension = _percentage(socialBase, 1600);
-      final int employerMedical = _percentage(socialBase, 980);
-      final int employerUnemployment = _percentage(socialBase, 50);
+      final int employerPension = _percentage(
+        socialBase,
+        employerPensionRateBps,
+      );
+      final int employerMedical = _percentage(
+        socialBase,
+        employerMedicalRateBps,
+      );
+      final int employerUnemployment = _percentage(
+        socialBase,
+        employerUnemploymentRateBps,
+      );
       final int employerWorkInjury = _percentage(
         socialBase,
         inputs.workInjuryRateBps,
@@ -168,9 +252,18 @@ class CalculationEngine {
         inputs.housingFundRateBps,
       );
 
-      final int employeePension = _percentage(socialBase, 800);
-      final int employeeMedical = _percentage(socialBase, 200);
-      final int employeeUnemployment = _percentage(socialBase, 50);
+      final int employeePension = _percentage(
+        socialBase,
+        employeePensionRateBps,
+      );
+      final int employeeMedical = _percentage(
+        socialBase,
+        employeeMedicalRateBps,
+      );
+      final int employeeUnemployment = _percentage(
+        socialBase,
+        employeeUnemploymentRateBps,
+      );
       final int employeeHousingFund = _percentage(
         inputs.housingFundBaseCents,
         inputs.housingFundRateBps,

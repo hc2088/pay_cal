@@ -19,6 +19,7 @@ class SavedCalculation {
     required this.annualEmployeeHousingFundCents,
     required this.annualEmployeeMedicalCents,
     required this.annualEmployeePensionCents,
+    required this.months,
   });
 
   factory SavedCalculation.capture({
@@ -42,6 +43,7 @@ class SavedCalculation {
       annualEmployeeHousingFundCents: result.annualEmployeeHousingFundCents,
       annualEmployeeMedicalCents: result.annualEmployeeMedicalCents,
       annualEmployeePensionCents: result.annualEmployeePensionCents,
+      months: List<MonthlyCalculationResult>.unmodifiable(result.months),
     );
   }
 
@@ -59,13 +61,14 @@ class SavedCalculation {
   final int annualEmployeeHousingFundCents;
   final int annualEmployeeMedicalCents;
   final int annualEmployeePensionCents;
+  final List<MonthlyCalculationResult> months;
 
   int get annualBilateralHousingFundCents =>
       annualEmployerHousingFundCents + annualEmployeeHousingFundCents;
 
   Map<String, Object?> toJson() {
     return <String, Object?>{
-      'schemaVersion': 1,
+      'schemaVersion': 2,
       'id': id,
       'savedAt': savedAt.toIso8601String(),
       'inputs': inputs.toJson(),
@@ -80,11 +83,15 @@ class SavedCalculation {
       'annualEmployeeHousingFundCents': annualEmployeeHousingFundCents,
       'annualEmployeeMedicalCents': annualEmployeeMedicalCents,
       'annualEmployeePensionCents': annualEmployeePensionCents,
+      'months': months
+          .map((MonthlyCalculationResult month) => month.toJson())
+          .toList(growable: false),
     };
   }
 
   factory SavedCalculation.fromJson(Map<String, dynamic> json) {
-    if (json['schemaVersion'] != 1) {
+    final Object? schemaVersion = json['schemaVersion'];
+    if (schemaVersion != 1 && schemaVersion != 2) {
       throw const FormatException('Unsupported saved calculation version');
     }
     final Object? rawInputs = json['inputs'];
@@ -98,6 +105,7 @@ class SavedCalculation {
         ? null
         : DateTime.tryParse(savedAtRaw);
     final String? rulesVersion = json['rulesVersion'] as String?;
+    final CalculatorInputs inputs = CalculatorInputs.fromJson(rawInputs);
     final Map<String, int> totals = <String, int>{
       'annualEmployerCostCents': _readNonnegativeInt(
         json,
@@ -133,6 +141,29 @@ class SavedCalculation {
         _nonnegativeDifference(
           totals['annualBenefitBCents']! - totals['annualBenefitACents']!,
         );
+    final Object? rawMonths = json['months'];
+    final List<MonthlyCalculationResult> months;
+    if (rawMonths is List<dynamic>) {
+      months = rawMonths
+          .map((Object? rawMonth) {
+            if (rawMonth is! Map<String, dynamic>) {
+              throw const FormatException('Invalid saved monthly result');
+            }
+            return MonthlyCalculationResult.fromJson(rawMonth);
+          })
+          .toList(growable: false);
+      if (months.length != 12 ||
+          months.asMap().entries.any(
+            (MapEntry<int, MonthlyCalculationResult> entry) =>
+                entry.value.month != entry.key + 1,
+          )) {
+        throw const FormatException('Invalid saved monthly result list');
+      }
+    } else if (schemaVersion == 1) {
+      months = CalculationEngine.calculate(inputs).months;
+    } else {
+      throw const FormatException('Missing saved monthly result list');
+    }
 
     if (id == null || savedAt == null || rulesVersion == null) {
       throw const FormatException('Invalid saved calculation metadata');
@@ -141,7 +172,7 @@ class SavedCalculation {
     return SavedCalculation(
       id: id,
       savedAt: savedAt,
-      inputs: CalculatorInputs.fromJson(rawInputs),
+      inputs: inputs,
       rulesVersion: rulesVersion,
       annualEmployerCostCents: totals['annualEmployerCostCents']!,
       annualNetCashCents: totals['annualNetCashCents']!,
@@ -153,6 +184,7 @@ class SavedCalculation {
       annualEmployeeHousingFundCents: totals['annualEmployeeHousingFundCents']!,
       annualEmployeeMedicalCents: annualEmployeeMedicalCents,
       annualEmployeePensionCents: annualEmployeePensionCents,
+      months: List<MonthlyCalculationResult>.unmodifiable(months),
     );
   }
 

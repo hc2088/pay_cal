@@ -1,7 +1,4 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../calculation/calculator_inputs.dart';
@@ -10,8 +7,8 @@ import '../../calculation/money_format.dart';
 import '../../calculation/saved_calculation.dart';
 import 'calculator_providers.dart';
 import 'calculation_history_screen.dart';
+import 'calculator_settings_screen.dart';
 import 'methodology_screen.dart';
-import 'rule_preview_dialog.dart';
 
 const Color _navy = Color(0xFF18324B);
 const Color _teal = Color(0xFF1D9A8A);
@@ -27,203 +24,13 @@ class CalculatorScreen extends ConsumerStatefulWidget {
 }
 
 class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
-  late final TextEditingController _salaryController;
-  late final TextEditingController _deductionController;
-  late final TextEditingController _socialBaseController;
-  late final TextEditingController _housingBaseController;
-  late final TextEditingController _housingRateController;
-  late final TextEditingController _workInjuryRateController;
-  final Map<String, String?> _errors = <String, String?>{
-    'salary': null,
-    'deduction': null,
-    'social': null,
-    'housingBase': null,
-    'rate': null,
-    'workInjuryRate': null,
-  };
   bool _annualView = true;
   int _month = 1;
-
-  bool get _invalidDraft =>
-      _errors.values.any((String? value) => value != null);
-
-  @override
-  void initState() {
-    super.initState();
-    final CalculatorInputs inputs = ref.read(calculatorInputsProvider);
-    _salaryController = TextEditingController(
-      text: formatEditableCents(inputs.grossMonthlySalaryCents),
-    );
-    _deductionController = TextEditingController(
-      text: formatEditableCents(inputs.specialAdditionalDeductionCents),
-    );
-    _socialBaseController = TextEditingController(
-      text: formatEditableCents(inputs.socialBaseCents),
-    );
-    _housingBaseController = TextEditingController(
-      text: formatEditableCents(inputs.housingFundBaseCents),
-    );
-    _housingRateController = TextEditingController(
-      text: formatEditableCents(inputs.housingFundRateBps),
-    );
-    _workInjuryRateController = TextEditingController(
-      text: formatEditableCents(inputs.workInjuryRateBps),
-    );
-  }
-
-  @override
-  void dispose() {
-    _salaryController.dispose();
-    _deductionController.dispose();
-    _socialBaseController.dispose();
-    _housingBaseController.dispose();
-    _housingRateController.dispose();
-    _workInjuryRateController.dispose();
-    super.dispose();
-  }
-
-  void _amountChanged(String field, String raw, void Function(int) onValid) {
-    final int? cents = parseAmountCents(raw);
-    String? error;
-    if (cents == null) {
-      error = raw.trim().isEmpty ? '请输入金额' : '最多输入两位小数';
-    } else if (cents > maxInputCents) {
-      error = '金额不能超过 999,999,999.99 元';
-    }
-    setState(() => _errors[field] = error);
-    if (error == null && cents != null) {
-      onValid(cents);
-    }
-  }
-
-  void _rateChanged(String raw) {
-    final int? rate = parseRateBasisPoints(raw);
-    String? error;
-    if (rate == null) {
-      error = raw.trim().isEmpty ? '请输入比例' : '最多输入两位小数';
-    } else if (rate > 10000) {
-      error = '比例需在 0%–100% 之间';
-    }
-    setState(() => _errors['rate'] = error);
-    if (error == null && rate != null) {
-      ref.read(calculatorInputsProvider.notifier).setHousingFundRate(rate);
-    }
-  }
-
-  void _workInjuryRateChanged(String raw) {
-    final int? rate = parseRateBasisPoints(raw);
-    String? error;
-    if (rate == null) {
-      error = raw.trim().isEmpty ? '请输入比例' : '最多输入两位小数';
-    } else if (rate > 10000) {
-      error = '比例需在 0%–100% 之间';
-    }
-    setState(() => _errors['workInjuryRate'] = error);
-    if (error == null && rate != null) {
-      ref.read(calculatorInputsProvider.notifier).setWorkInjuryRate(rate);
-    }
-  }
-
-  void _housingBaseChanged(String raw) {
-    _amountChanged('housingBase', raw, (int cents) {
-      ref
-          .read(calculatorInputsProvider.notifier)
-          .setCustomHousingFundBase(cents);
-    });
-  }
-
-  void _showRulePreview({required String title, required String assetPath}) {
-    FocusManager.instance.primaryFocus?.unfocus();
-    unawaited(
-      showRulePreviewDialog(context, title: title, assetPath: assetPath),
-    );
-  }
-
-  Future<void> _restoreDefaults() async {
-    final bool? confirmed = await showDialog<bool>(
-      context: context,
-      builder: (BuildContext context) => AlertDialog(
-        title: const Text('恢复默认参数？'),
-        content: const Text('工资、扣除额、缴费比例及社保、公积金基数设置将恢复初始值。'),
-        actions: <Widget>[
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('取消'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('恢复默认'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) {
-      return;
-    }
-    final CalculatorInputs defaults = CalculatorInputs.defaults();
-    ref.read(calculatorInputsProvider.notifier).restoreDefaults();
-    _salaryController.text = formatEditableCents(
-      defaults.grossMonthlySalaryCents,
-    );
-    _deductionController.text = formatEditableCents(
-      defaults.specialAdditionalDeductionCents,
-    );
-    _socialBaseController.text = formatEditableCents(defaults.socialBaseCents);
-    _housingBaseController.text = formatEditableCents(
-      defaults.housingFundBaseCents,
-    );
-    _housingRateController.text = formatEditableCents(
-      defaults.housingFundRateBps,
-    );
-    _workInjuryRateController.text = formatEditableCents(
-      defaults.workInjuryRateBps,
-    );
-    setState(() {
-      _errors.updateAll((String key, String? value) => null);
-      _annualView = true;
-      _month = 1;
-    });
-  }
-
-  void _makeSocialBaseCustom() {
-    final CalculatorInputs inputs = ref.read(calculatorInputsProvider);
-    _socialBaseController.text = formatEditableCents(inputs.socialBaseCents);
-    ref
-        .read(calculatorInputsProvider.notifier)
-        .setCustomSocialBase(inputs.socialBaseCents);
-    setState(() => _errors['social'] = null);
-  }
-
-  void _makeSocialBaseFollowSalary() {
-    ref.read(calculatorInputsProvider.notifier).followSalaryForSocialBase();
-    setState(() => _errors['social'] = null);
-  }
-
-  void _makeHousingBaseCustom() {
-    final CalculatorInputs inputs = ref.read(calculatorInputsProvider);
-    _housingBaseController.text = formatEditableCents(
-      inputs.housingFundBaseCents,
-    );
-    ref
-        .read(calculatorInputsProvider.notifier)
-        .setCustomHousingFundBase(inputs.housingFundBaseCents);
-    setState(() => _errors['housingBase'] = null);
-  }
-
-  void _makeHousingBaseFollowSocial() {
-    ref
-        .read(calculatorInputsProvider.notifier)
-        .followSocialBaseForHousingFund();
-    setState(() => _errors['housingBase'] = null);
-  }
 
   Future<void> _saveCurrentCalculation(
     CalculatorInputs inputs,
     CalculationResult result,
   ) async {
-    if (_invalidDraft) {
-      return;
-    }
     FocusManager.instance.primaryFocus?.unfocus();
     try {
       await ref
@@ -281,7 +88,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                       children: <Widget>[
                         _header(),
                         const SizedBox(height: 20),
-                        _parameters(inputs, maxWidth - 40, history.length),
+                        _parameters(inputs, history.length),
                         const SizedBox(height: 22),
                         _results(inputs, result),
                         const SizedBox(height: 18),
@@ -369,51 +176,108 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ),
           ),
         ),
-        const SizedBox(width: 8),
-        IconButton(
-          tooltip: '恢复默认参数',
-          onPressed: _restoreDefaults,
-          icon: const Icon(Icons.restart_alt_rounded),
-          color: _muted,
-          style: IconButton.styleFrom(
-            backgroundColor: Colors.white,
-            side: const BorderSide(color: _line),
-          ),
-        ),
       ],
     );
   }
 
-  Widget _parameters(CalculatorInputs inputs, double width, int historyCount) {
-    final bool twoColumns = width >= 540;
-    final double half = twoColumns ? (width - 12) / 2 : width;
+  Widget _parameters(CalculatorInputs inputs, int historyCount) {
+    final String socialMode =
+        inputs.socialBaseMode == SocialBaseMode.followSalary ? '跟随工资' : '自定义';
+    final String housingMode =
+        inputs.housingFundBaseMode == HousingFundBaseMode.followSocialBase
+        ? '跟随社保'
+        : '自定义';
     return _Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          const Row(
+          Row(
             children: <Widget>[
-              Expanded(
+              const Expanded(
                 child: _SectionTitle(
-                  eyebrow: 'INPUTS',
-                  title: '测算参数',
-                  subtitle: '调整参数，结果即时更新',
+                  eyebrow: 'CURRENT SCHEME',
+                  title: '当前薪资方案',
+                  subtitle: '核心参数一目了然，点击可查看或调整',
                 ),
               ),
-              _LiveBadge(),
+              OutlinedButton.icon(
+                onPressed: _openSettings,
+                icon: const Icon(Icons.tune_rounded, size: 17),
+                label: const Text('编辑'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: _teal,
+                  side: const BorderSide(color: _line),
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: 15),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(15),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F8FC),
+              borderRadius: BorderRadius.circular(15),
+              border: Border.all(color: _line),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                const Text(
+                  '月税前工资',
+                  style: TextStyle(color: _muted, fontSize: 11),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  formatCents(inputs.grossMonthlySalaryCents),
+                  style: const TextStyle(
+                    color: _navy,
+                    fontSize: 25,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: <Widget>[
+                    _ParameterChip(
+                      label: '专项附加扣除',
+                      value:
+                          '${formatCents(inputs.specialAdditionalDeductionCents)} / 月',
+                    ),
+                    _ParameterChip(
+                      label: '公积金比例',
+                      value: '${formatRate(inputs.housingFundRateBps)} · 单位/个人',
+                    ),
+                    _ParameterChip(
+                      label: '工伤费率',
+                      value: '${formatRate(inputs.workInjuryRateBps)} · 单位承担',
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 11),
+                _ParameterLine(
+                  label: '社保基数（$socialMode）',
+                  value: formatCents(inputs.socialBaseCents),
+                ),
+                const SizedBox(height: 5),
+                _ParameterLine(
+                  label: '公积金基数（$housingMode）',
+                  value: formatCents(inputs.housingFundBaseCents),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 13),
           Row(
             children: <Widget>[
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: _invalidDraft
-                      ? null
-                      : () => _saveCurrentCalculation(
-                          inputs,
-                          ref.read(calculationProvider),
-                        ),
+                  onPressed: () => _saveCurrentCalculation(
+                    inputs,
+                    ref.read(calculationProvider),
+                  ),
                   icon: const Icon(Icons.bookmark_add_outlined, size: 18),
                   label: const Text('保存本次'),
                   style: FilledButton.styleFrom(
@@ -440,294 +304,16 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 16),
-          _Field(
-            title: '月税前工资',
-            helper: '按固定月薪测算全年',
-            controller: _salaryController,
-            error: _errors['salary'],
-            prefix: '¥',
-            large: true,
-            onChanged: (String raw) {
-              _amountChanged('salary', raw, (int cents) {
-                ref.read(calculatorInputsProvider.notifier).setSalary(cents);
-              });
-            },
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            children: <Widget>[
-              SizedBox(
-                width: half,
-                child: _Field(
-                  title: '专项附加扣除',
-                  helper: '默认合计 5,000 元/月',
-                  controller: _deductionController,
-                  error: _errors['deduction'],
-                  prefix: '¥',
-                  onInfoTap: () => _showRulePreview(
-                    title: '专项附加扣除规则',
-                    assetPath: 'doc/rules/special_additional_deductions.md',
-                  ),
-                  onChanged: (String raw) {
-                    _amountChanged('deduction', raw, (int cents) {
-                      ref
-                          .read(calculatorInputsProvider.notifier)
-                          .setSpecialDeduction(cents);
-                    });
-                  },
-                ),
-              ),
-              SizedBox(
-                width: half,
-                child: _Field(
-                  title: '公积金比例',
-                  helper: '单位和个人各缴一份',
-                  controller: _housingRateController,
-                  error: _errors['rate'],
-                  suffix: '%',
-                  onInfoTap: () => _showRulePreview(
-                    title: '住房公积金比例规则',
-                    assetPath: 'doc/rules/housing_fund_rate.md',
-                  ),
-                  onChanged: _rateChanged,
-                ),
-              ),
-              SizedBox(
-                width: half,
-                child: _Field(
-                  title: '工伤保险费率',
-                  helper: '单位承担，默认 0.2%',
-                  controller: _workInjuryRateController,
-                  error: _errors['workInjuryRate'],
-                  suffix: '%',
-                  onInfoTap: () => _showRulePreview(
-                    title: '工伤保险费率规则',
-                    assetPath: 'doc/rules/work_injury_rate.md',
-                  ),
-                  onChanged: _workInjuryRateChanged,
-                ),
-              ),
-              SizedBox(width: width, child: _socialBaseField(inputs)),
-              SizedBox(width: width, child: _housingFundBaseField(inputs)),
-            ],
-          ),
         ],
       ),
     );
   }
 
-  Widget _socialBaseField(CalculatorInputs inputs) {
-    final bool custom = inputs.socialBaseMode == SocialBaseMode.custom;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      '社保缴费基数',
-                      style: TextStyle(
-                        color: _navy,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      '养老、医疗、失业和工伤共用',
-                      style: TextStyle(color: _muted, fontSize: 10.5),
-                    ),
-                  ],
-                ),
-              ),
-              _ModeChip(
-                label: '跟随工资',
-                selected: !custom,
-                onTap: _makeSocialBaseFollowSalary,
-              ),
-              const SizedBox(width: 6),
-              _ModeChip(
-                label: '自定义',
-                selected: custom,
-                onTap: _makeSocialBaseCustom,
-              ),
-            ],
-          ),
-          const SizedBox(height: 11),
-          if (custom)
-            _Field(
-              title: '自定义社保基数',
-              helper: '首版不自动套用地区上下限',
-              controller: _socialBaseController,
-              error: _errors['social'],
-              prefix: '¥',
-              onChanged: (String raw) {
-                _amountChanged('social', raw, (int cents) {
-                  ref
-                      .read(calculatorInputsProvider.notifier)
-                      .setCustomSocialBase(cents);
-                });
-              },
-            )
-          else
-            Row(
-              children: <Widget>[
-                const Icon(Icons.link_rounded, color: _teal, size: 16),
-                const SizedBox(width: 7),
-                Text(
-                  '当前基数  ${formatCents(inputs.grossMonthlySalaryCents)}',
-                  style: const TextStyle(
-                    color: _navy,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const Spacer(),
-                const Text(
-                  '随工资自动变化',
-                  style: TextStyle(color: _muted, fontSize: 10.5),
-                ),
-              ],
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _housingFundBaseField(CalculatorInputs inputs) {
-    final bool custom =
-        inputs.housingFundBaseMode == HousingFundBaseMode.custom;
-    final String source = inputs.socialBaseMode == SocialBaseMode.custom
-        ? '自定义社保基数'
-        : '税前工资对应的社保基数';
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
-                      '住房公积金缴存基数',
-                      style: TextStyle(
-                        color: _navy,
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    SizedBox(height: 3),
-                    Text(
-                      '默认跟随社保基数，可单独自定义',
-                      style: TextStyle(color: _muted, fontSize: 10.5),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                tooltip: '查看住房公积金缴存基数规则',
-                onPressed: () => _showRulePreview(
-                  title: '住房公积金缴存基数规则',
-                  assetPath: 'doc/rules/housing_fund_base.md',
-                ),
-                icon: const Icon(Icons.info_outline_rounded),
-                color: _teal,
-                iconSize: 18,
-                padding: EdgeInsets.zero,
-                visualDensity: VisualDensity.compact,
-                constraints: const BoxConstraints.tightFor(
-                  width: 40,
-                  height: 40,
-                ),
-                splashRadius: 20,
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: <Widget>[
-              _ModeChip(
-                label: '跟随社保基数',
-                selected: !custom,
-                onTap: _makeHousingBaseFollowSocial,
-              ),
-              _ModeChip(
-                label: '自定义',
-                selected: custom,
-                onTap: _makeHousingBaseCustom,
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          if (custom)
-            _Field(
-              title: '自定义公积金缴存基数',
-              helper: '不随社保基数变化；按实际核定金额填写',
-              controller: _housingBaseController,
-              error: _errors['housingBase'],
-              prefix: '¥',
-              onChanged: _housingBaseChanged,
-            )
-          else
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: _line),
-              ),
-              child: Row(
-                children: <Widget>[
-                  const Icon(Icons.link_rounded, color: _teal, size: 17),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: <Widget>[
-                        Text(
-                          '当前公积金基数  ${formatCents(inputs.housingFundBaseCents)}',
-                          style: const TextStyle(
-                            color: _navy,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '联动来源：$source',
-                          style: const TextStyle(color: _muted, fontSize: 10.5),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
+  void _openSettings() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (BuildContext context) => const CalculatorSettingsScreen(),
       ),
     );
   }
@@ -812,103 +398,106 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           ),
         ],
         const SizedBox(height: 14),
-        if (_invalidDraft)
+        LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints constraints) {
+            const double gap = 12;
+            final double cardWidth = constraints.maxWidth >= 340
+                ? (constraints.maxWidth - gap) / 2
+                : constraints.maxWidth;
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: <Widget>[
+                SizedBox(
+                  width: cardWidth,
+                  child: _MetricCard(
+                    label: _annualView ? '全年单位成本' : '单位月成本',
+                    value: formatCents(cost),
+                    icon: Icons.apartment_rounded,
+                    tone: _MetricTone.navy,
+                    helper: '税前工资 + 单位缴费',
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: _MetricCard(
+                    label: _annualView ? '全年税后现金' : '税后现金',
+                    value: formatCents(cash),
+                    icon: Icons.account_balance_wallet_rounded,
+                    tone: _MetricTone.teal,
+                    helper: '已扣个人缴费与预扣个税',
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: _MetricCard(
+                    label: _annualView ? '全年综合到手' : '综合到手',
+                    value: formatCents(benefitA),
+                    icon: Icons.savings_rounded,
+                    tone: _MetricTone.white,
+                    helper: '税后现金 + 双边公积金 + 个人医保',
+                  ),
+                ),
+                SizedBox(
+                  width: cardWidth,
+                  child: _MetricCard(
+                    label: _annualView ? '全年综合到手 + 养老' : '综合到手 + 养老',
+                    value: formatCents(benefitB),
+                    icon: Icons.trending_up_rounded,
+                    tone: _MetricTone.blue,
+                    helper: '综合到手 + 个人养老账户入账',
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+        const SizedBox(height: 12),
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(17, 14, 17, 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                _DetailGroup(
+                  title: '综合到手组成',
+                  rows: <_DetailLine>[
+                    _DetailLine(
+                      _annualView ? '税后现金（全年）' : '税后现金（$_month 月）',
+                      cash,
+                    ),
+                    _DetailLine('双边公积金入账', bilateralHousingFund),
+                    _DetailLine('个人医保账户入账', employeeMedical),
+                    _DetailLine('综合到手', benefitA, strong: true),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _DetailGroup(
+                  title: '养老账户（仅计入“综合到手 + 养老”）',
+                  rows: <_DetailLine>[
+                    _DetailLine('个人养老账户入账', employeePension),
+                    _DetailLine('综合到手 + 养老', benefitB, strong: true),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  '个人失业保险和大病统筹属于现金扣款，已在计算依据的个人扣款项列出，不会加进综合到手。账户入账不等于可立即支取。',
+                  style: TextStyle(color: _muted, fontSize: 10, height: 1.45),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 11),
+        _taxStrip(tax, _annualView ? '全年累计预扣个税' : '本月预扣个税', taxNote),
+        if (inputs.socialBaseMode == SocialBaseMode.custom) ...<Widget>[
+          const SizedBox(height: 9),
           _notice(
-            '请完成参数输入。输入有效后，结果会立即更新。',
+            '自定义社保基数 ${formatCents(inputs.socialBaseCents)}，工资 ${formatCents(inputs.grossMonthlySalaryCents)}',
             background: const Color(0xFFFFF7E8),
             foreground: const Color(0xFF805C1E),
-            icon: Icons.edit_note_rounded,
-          )
-        else ...<Widget>[
-          LayoutBuilder(
-            builder: (BuildContext context, BoxConstraints constraints) {
-              const double gap = 12;
-              final double cardWidth = constraints.maxWidth >= 340
-                  ? (constraints.maxWidth - gap) / 2
-                  : constraints.maxWidth;
-              return Wrap(
-                spacing: gap,
-                runSpacing: gap,
-                children: <Widget>[
-                  SizedBox(
-                    width: cardWidth,
-                    child: _MetricCard(
-                      label: _annualView ? '全年单位成本' : '单位月成本',
-                      value: formatCents(cost),
-                      icon: Icons.apartment_rounded,
-                      tone: _MetricTone.navy,
-                      helper: '税前工资 + 单位缴费',
-                    ),
-                  ),
-                  SizedBox(
-                    width: cardWidth,
-                    child: _MetricCard(
-                      label: _annualView ? '全年税后现金' : '税后现金',
-                      value: formatCents(cash),
-                      icon: Icons.account_balance_wallet_rounded,
-                      tone: _MetricTone.teal,
-                      helper: '扣个人缴费与预扣个税',
-                    ),
-                  ),
-                  SizedBox(
-                    width: cardWidth,
-                    child: _MetricCard(
-                      label: _annualView ? '全年综合到手' : '综合到手',
-                      value: formatCents(benefitA),
-                      icon: Icons.savings_rounded,
-                      tone: _MetricTone.white,
-                      helper: '现金 + 双边公积金 + 个人医保',
-                    ),
-                  ),
-                  SizedBox(
-                    width: cardWidth,
-                    child: _MetricCard(
-                      label: _annualView ? '全年综合到手 + 养老' : '综合到手 + 养老',
-                      value: formatCents(benefitB),
-                      icon: Icons.trending_up_rounded,
-                      tone: _MetricTone.blue,
-                      helper: '综合到手 + 个人养老账户',
-                    ),
-                  ),
-                ],
-              );
-            },
+            icon: Icons.tune_rounded,
           ),
-          const SizedBox(height: 12),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(17, 14, 17, 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: <Widget>[
-                  _DetailGroup(
-                    title: '权益账户入账',
-                    rows: <_DetailLine>[
-                      _DetailLine('公积金入账（单位 + 个人）', bilateralHousingFund),
-                      _DetailLine('个人医保账户入账', employeeMedical),
-                      _DetailLine('个人养老账户入账', employeePension),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    '公积金为单位和个人缴存合计；账户入账不等于可立即支取。',
-                    style: TextStyle(color: _muted, fontSize: 10),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 11),
-          _taxStrip(tax, _annualView ? '全年累计预扣个税' : '本月预扣个税', taxNote),
-          if (inputs.socialBaseMode == SocialBaseMode.custom) ...<Widget>[
-            const SizedBox(height: 9),
-            _notice(
-              '自定义社保基数 ${formatCents(inputs.socialBaseCents)}，工资 ${formatCents(inputs.grossMonthlySalaryCents)}',
-              background: const Color(0xFFFFF7E8),
-              foreground: const Color(0xFF805C1E),
-              icon: Icons.tune_rounded,
-            ),
-          ],
         ],
       ],
     );
@@ -916,9 +505,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
 
   Widget _monthsCard(CalculationResult result) {
     final MonthlyCalculationResult month = result.months[_month - 1];
-    final String preview = _invalidDraft
-        ? '请完成参数输入后查看月度结果'
-        : _annualView
+    final String preview = _annualView
         ? '全年预览 · 共 12 个月，跨税档月份会标记'
         : '$_month 月预览 · ${formatRate(month.taxBracketRateBps)} 档 · 税后现金 ${formatCents(month.netCashCents)}';
 
@@ -950,26 +537,18 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             style: const TextStyle(color: _muted, fontSize: 11),
           ),
           children: <Widget>[
-            if (_invalidDraft)
-              _notice(
-                '参数草稿尚未完成，月度结果暂时隐藏。',
-                background: const Color(0xFFFFF7E8),
-                foreground: const Color(0xFF805C1E),
-                icon: Icons.edit_note_rounded,
-              )
-            else
-              for (int i = 0; i < result.months.length; i++)
-                _MonthRow(
-                  month: result.months[i],
-                  previous: i == 0 ? null : result.months[i - 1],
-                  selected: !_annualView && _month == i + 1,
-                  onTap: () {
-                    setState(() {
-                      _annualView = false;
-                      _month = i + 1;
-                    });
-                  },
-                ),
+            for (int i = 0; i < result.months.length; i++)
+              _MonthRow(
+                month: result.months[i],
+                previous: i == 0 ? null : result.months[i - 1],
+                selected: !_annualView && _month == i + 1,
+                onTap: () {
+                  setState(() {
+                    _annualView = false;
+                    _month = i + 1;
+                  });
+                },
+              ),
           ],
         ),
       ),
@@ -980,14 +559,6 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     CalculatorInputs inputs,
     CalculationResult result,
   ) {
-    if (_invalidDraft) {
-      return _notice(
-        '完成有效输入后可查看对应的计算拆解。',
-        background: const Color(0xFFEFF3F7),
-        foreground: _muted,
-        icon: Icons.info_outline_rounded,
-      );
-    }
     final MonthlyCalculationResult month = result.months[_month - 1];
     final bool annual = _annualView;
     int amount(int annualAmount, int monthAmount) =>
@@ -1017,7 +588,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             style: TextStyle(color: _navy, fontWeight: FontWeight.w700),
           ),
           subtitle: Text(
-            '${annual ? '全年合计' : '$_month 月'} · 费率与综合到手组成',
+            '${annual ? '全年合计' : '$_month 月'} · 个人扣款、5,000 元基本减除、附加扣除与累计预扣税',
             style: const TextStyle(color: _muted, fontSize: 11),
           ),
           children: <Widget>[
@@ -1040,13 +611,6 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   amount(
                     inputs.housingFundBaseCents,
                     inputs.housingFundBaseCents,
-                  ),
-                ),
-                _DetailLine(
-                  '个人扣款合计',
-                  amount(
-                    sum((m) => m.personalDeductionTotalCents),
-                    month.personalDeductionTotalCents,
                   ),
                 ),
                 _DetailLine(
@@ -1078,6 +642,62 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   '本期预扣个税',
                   amount(result.annualTaxCents, month.monthlyTaxCents),
                 ),
+                _DetailLine(
+                  '适用预扣率',
+                  null,
+                  trailing: annual
+                      ? '逐月累计'
+                      : formatRate(month.taxBracketRateBps),
+                ),
+              ],
+            ),
+            const SizedBox(height: 15),
+            _DetailGroup(
+              title: '个人扣款（已从现金扣除）',
+              rows: <_DetailLine>[
+                _DetailLine(
+                  '个人养老保险 · ${formatRate(employeePensionRateBps)}',
+                  amount(
+                    result.annualEmployeePensionCents,
+                    month.employeePensionCents,
+                  ),
+                ),
+                _DetailLine(
+                  '个人医疗保险 · ${formatRate(employeeMedicalRateBps)}',
+                  amount(
+                    result.annualEmployeeMedicalCents,
+                    month.employeeMedicalCents,
+                  ),
+                ),
+                _DetailLine(
+                  '个人失业保险 · ${formatRate(employeeUnemploymentRateBps)}',
+                  amount(
+                    sum((m) => m.employeeUnemploymentCents),
+                    month.employeeUnemploymentCents,
+                  ),
+                ),
+                _DetailLine(
+                  '个人公积金 · ${formatRate(inputs.housingFundRateBps)}',
+                  amount(
+                    result.annualEmployeeHousingFundCents,
+                    month.employeeHousingFundCents,
+                  ),
+                ),
+                _DetailLine(
+                  '个人大病统筹（固定）',
+                  amount(
+                    result.annualCriticalIllnessCents,
+                    month.criticalIllnessCents,
+                  ),
+                ),
+                _DetailLine(
+                  '个人扣款合计',
+                  amount(
+                    sum((m) => m.personalDeductionTotalCents),
+                    month.personalDeductionTotalCents,
+                  ),
+                  strong: true,
+                ),
               ],
             ),
             const SizedBox(height: 15),
@@ -1085,21 +705,21 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               title: '单位承担',
               rows: <_DetailLine>[
                 _DetailLine(
-                  '单位养老保险 · 16%',
+                  '单位养老保险 · ${formatRate(employerPensionRateBps)}',
                   amount(
                     sum((m) => m.employerPensionCents),
                     month.employerPensionCents,
                   ),
                 ),
                 _DetailLine(
-                  '单位医疗保险 · 9.8%',
+                  '单位医疗保险 · ${formatRate(employerMedicalRateBps)}',
                   amount(
                     sum((m) => m.employerMedicalCents),
                     month.employerMedicalCents,
                   ),
                 ),
                 _DetailLine(
-                  '单位失业保险 · 0.5%',
+                  '单位失业保险 · ${formatRate(employerUnemploymentRateBps)}',
                   amount(
                     sum((m) => m.employerUnemploymentCents),
                     month.employerUnemploymentCents,
@@ -1134,25 +754,8 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               title: '综合到手组成',
               rows: <_DetailLine>[
                 _DetailLine(
-                  '个人养老保险 · 8%',
-                  amount(
-                    result.annualEmployeePensionCents,
-                    month.employeePensionCents,
-                  ),
-                ),
-                _DetailLine(
-                  '个人医疗保险 · 2%',
-                  amount(
-                    result.annualEmployeeMedicalCents,
-                    month.employeeMedicalCents,
-                  ),
-                ),
-                _DetailLine(
-                  '个人失业保险 · 0.5%',
-                  amount(
-                    sum((m) => m.employeeUnemploymentCents),
-                    month.employeeUnemploymentCents,
-                  ),
+                  '税后现金',
+                  amount(result.annualNetCashCents, month.netCashCents),
                 ),
                 _DetailLine(
                   '双边公积金 · 基数 ${formatCents(inputs.housingFundBaseCents)}',
@@ -1164,26 +767,25 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   ),
                 ),
                 _DetailLine(
-                  '个人大病统筹',
+                  '个人医保账户入账',
                   amount(
-                    result.annualCriticalIllnessCents,
-                    month.criticalIllnessCents,
+                    result.annualEmployeeMedicalCents,
+                    month.employeeMedicalCents,
                   ),
-                ),
-                _DetailLine(
-                  '适用预扣率',
-                  null,
-                  trailing: annual
-                      ? '逐月累计'
-                      : formatRate(month.taxBracketRateBps),
                 ),
                 _DetailLine(
                   '综合到手',
                   amount(result.annualBenefitACents, month.benefitACents),
                   strong: true,
                 ),
+              ],
+            ),
+            const SizedBox(height: 15),
+            _DetailGroup(
+              title: '养老账户（仅计入“综合到手 + 养老”）',
+              rows: <_DetailLine>[
                 _DetailLine(
-                  '个人养老账户',
+                  '个人养老账户入账 · 个人缴费 8%',
                   amount(
                     result.annualEmployeePensionCents,
                     month.employeePensionCents,
@@ -1212,145 +814,60 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
   }
 }
 
-class _Field extends StatelessWidget {
-  const _Field({
-    required this.title,
-    required this.helper,
-    required this.controller,
-    required this.onChanged,
-    this.error,
-    this.prefix,
-    this.suffix,
-    this.onInfoTap,
-    this.large = false,
-  });
+class _ParameterChip extends StatelessWidget {
+  const _ParameterChip({required this.label, required this.value});
 
-  final String title;
-  final String helper;
-  final TextEditingController controller;
-  final ValueChanged<String> onChanged;
-  final String? error;
-  final String? prefix;
-  final String? suffix;
-  final VoidCallback? onInfoTap;
-  final bool large;
+  final String label;
+  final String value;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(13),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _line),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    color: _navy,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              if (onInfoTap != null)
-                IconButton(
-                  tooltip: '查看$title规则',
-                  onPressed: onInfoTap,
-                  icon: const Icon(Icons.info_outline_rounded),
-                  color: _teal,
-                  iconSize: 18,
-                  padding: EdgeInsets.zero,
-                  visualDensity: VisualDensity.compact,
-                  constraints: const BoxConstraints.tightFor(
-                    width: 40,
-                    height: 40,
-                  ),
-                  splashRadius: 20,
-                ),
-            ],
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      border: Border.all(color: _line),
+      borderRadius: BorderRadius.circular(11),
+    ),
+    child: RichText(
+      text: TextSpan(
+        style: const TextStyle(fontSize: 10.5),
+        children: <InlineSpan>[
+          TextSpan(
+            text: '$label  ',
+            style: const TextStyle(color: _muted),
           ),
-          const SizedBox(height: 3),
-          Text(helper, style: const TextStyle(color: _muted, fontSize: 10.5)),
-          const SizedBox(height: 8),
-          TextField(
-            controller: controller,
-            onChanged: onChanged,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            textInputAction: TextInputAction.next,
-            inputFormatters: <TextInputFormatter>[
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-              LengthLimitingTextInputFormatter(14),
-            ],
-            style: TextStyle(
-              color: _navy,
-              fontSize: large ? 22 : 17,
-              fontWeight: FontWeight.w700,
-            ),
-            decoration: InputDecoration(
-              prefixText: prefix,
-              suffixText: suffix,
-              errorText: error,
-              isDense: true,
-              prefixStyle: const TextStyle(
-                color: _muted,
-                fontSize: 17,
-                fontWeight: FontWeight.w600,
-              ),
-              suffixStyle: const TextStyle(
-                color: _muted,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+          TextSpan(
+            text: value,
+            style: const TextStyle(color: _navy, fontWeight: FontWeight.w700),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
 }
 
-class _ModeChip extends StatelessWidget {
-  const _ModeChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
+class _ParameterLine extends StatelessWidget {
+  const _ParameterLine({required this.label, required this.value});
 
   final String label;
-  final bool selected;
-  final VoidCallback onTap;
+  final String value;
 
   @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(9),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 140),
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7),
-        decoration: BoxDecoration(
-          color: selected ? _navy : Colors.white,
-          border: Border.all(color: selected ? _navy : _line),
-          borderRadius: BorderRadius.circular(9),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: selected ? Colors.white : _muted,
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-          ),
+  Widget build(BuildContext context) => Row(
+    children: <Widget>[
+      Expanded(
+        child: Text(label, style: const TextStyle(color: _muted, fontSize: 11)),
+      ),
+      Text(
+        value,
+        style: const TextStyle(
+          color: _navy,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
         ),
       ),
-    );
-  }
+    ],
+  );
 }
 
 class _ViewToggle extends StatelessWidget {
@@ -1814,36 +1331,6 @@ class _SectionTitle extends StatelessWidget {
         const SizedBox(height: 3),
         Text(subtitle, style: const TextStyle(color: _muted, fontSize: 10.5)),
       ],
-    );
-  }
-}
-
-class _LiveBadge extends StatelessWidget {
-  const _LiveBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEAF7F4),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          Icon(Icons.bolt_rounded, size: 14, color: _teal),
-          SizedBox(width: 3),
-          Text(
-            '实时计算',
-            style: TextStyle(
-              color: _teal,
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
