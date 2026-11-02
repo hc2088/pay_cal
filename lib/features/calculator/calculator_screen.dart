@@ -438,7 +438,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 SizedBox(
                   width: cardWidth,
                   child: _MetricCard(
-                    label: _annualView ? '全年税后现金' : '税后现金',
+                    label: _annualView ? '全年税后工资' : '税后工资',
                     value: formatCents(cash),
                     icon: Icons.account_balance_wallet_rounded,
                     tone: _MetricTone.teal,
@@ -452,7 +452,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                     value: formatCents(benefitA),
                     icon: Icons.savings_rounded,
                     tone: _MetricTone.white,
-                    helper: '税后现金 + 双边公积金 + 个人医保',
+                    helper: '税后工资 + 双边公积金 + 个人医保',
                   ),
                 ),
                 SizedBox(
@@ -480,7 +480,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                   title: '综合到手组成',
                   rows: <_DetailLine>[
                     _DetailLine(
-                      _annualView ? '税后现金（全年）' : '税后现金（$_month 月）',
+                      _annualView ? '税后工资（全年）' : '税后工资（$_month 月）',
                       cash,
                     ),
                     _DetailLine('双边公积金入账', bilateralHousingFund),
@@ -524,7 +524,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     final MonthlyCalculationResult month = result.months[_month - 1];
     final String preview = _annualView
         ? '全年预览 · 共 12 个月，跨税档月份会标记'
-        : '$_month 月预览 · ${formatRate(month.taxBracketRateBps)} 档 · 税后现金 ${formatCents(month.netCashCents)}';
+        : '$_month 月预览 · ${formatRate(month.taxBracketRateBps)} 档 · 税后工资 ${formatCents(month.netCashCents)}';
 
     return Card(
       child: Theme(
@@ -771,7 +771,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
               title: '综合到手组成',
               rows: <_DetailLine>[
                 _DetailLine(
-                  '税后现金',
+                  '税后工资',
                   amount(result.annualNetCashCents, month.netCashCents),
                 ),
                 _DetailLine(
@@ -1146,7 +1146,7 @@ class _MonthRow extends StatelessWidget {
                 children: <Widget>[
                   Expanded(
                     child: _MiniAmount(
-                      label: '税后现金',
+                      label: '税后工资',
                       value: formatCents(month.netCashCents),
                     ),
                   ),

@@ -240,7 +240,7 @@ class _SalaryShareCard extends StatelessWidget {
                     tone: _MetricColor.navy,
                   ),
                   second: _MetricData(
-                    '全年税后现金',
+                    '全年税后工资',
                     snapshot.annualNetCashCents,
                     tone: _MetricColor.teal,
                   ),
@@ -261,12 +261,12 @@ class _SalaryShareCard extends StatelessWidget {
           const SizedBox(height: 12),
           _ShareSection(
             title: '逐月收入明细',
-            subtitle: '单位：元 · 税前工资、个人扣款、个税与税后现金',
+            subtitle: '单位：元 · 税前工资、个人扣款、个税与税后工资',
             child: _ShareMonthlyTable(months: snapshot.months),
           ),
           const SizedBox(height: 9),
           const Text(
-            '综合到手含税后现金、双边公积金和个人医保账户入账。结果为估算，请以实际工资单为准。',
+            '综合到手含税后工资、双边公积金和个人医保账户入账。结果为估算，请以实际工资单为准。',
             style: TextStyle(color: _shareMuted, fontSize: 8.5, height: 1.4),
           ),
         ],
@@ -504,7 +504,7 @@ class _ShareMonthlyTable extends StatelessWidget {
         salary: '税前',
         deductions: '个人扣款',
         tax: '个税',
-        netCash: '税后现金',
+        netCash: '税后工资',
         isHeader: true,
       ),
       for (int index = 0; index < months.length; index++)

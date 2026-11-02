@@ -61,7 +61,7 @@ class SavedCalculationDetailScreen extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _SummaryCard(
-            title: '全年税后现金',
+            title: '全年税后工资',
             value: formatCents(calculation.annualNetCashCents),
             accent: true,
           ),
@@ -172,7 +172,7 @@ class SavedCalculationDetailScreen extends StatelessWidget {
             _MonthlyBreakdownCard(calculation: calculation, month: month),
           const SizedBox(height: 8),
           const Text(
-            '综合到手 = 税后现金 + 双边公积金 + 个人医保账户入账；个人失业保险和大病统筹是现金扣款，不属于综合权益。个人养老账户另计入“综合到手 + 养老”。账户入账不等于全部可立即支取。',
+            '综合到手 = 税后工资 + 双边公积金 + 个人医保账户入账；个人失业保险和大病统筹是现金扣款，不属于综合权益。个人养老账户另计入“综合到手 + 养老”。账户入账不等于全部可立即支取。',
             style: TextStyle(color: _detailMuted, fontSize: 11, height: 1.5),
           ),
         ],
@@ -209,7 +209,7 @@ class _MonthlyBreakdownCard extends StatelessWidget {
             ),
           ),
           subtitle: Text(
-            '税前 ${formatCents(month.salaryCents)} · 税后现金 ${formatCents(month.netCashCents)} · 预扣税 ${formatCents(month.monthlyTaxCents)}',
+            '税前 ${formatCents(month.salaryCents)} · 税后工资 ${formatCents(month.netCashCents)} · 预扣税 ${formatCents(month.monthlyTaxCents)}',
             style: const TextStyle(color: _detailMuted, fontSize: 10.5),
           ),
           children: <Widget>[
@@ -264,7 +264,7 @@ class _MonthlyBreakdownCard extends StatelessWidget {
                 ),
                 _InfoRowData('本月预扣个税', formatCents(month.monthlyTaxCents)),
                 _InfoRowData(
-                  '税后现金',
+                  '税后工资',
                   formatCents(month.netCashCents),
                   strong: true,
                 ),
@@ -274,7 +274,7 @@ class _MonthlyBreakdownCard extends StatelessWidget {
             _BreakdownSection(
               title: '综合到手组成',
               rows: <_InfoRowData>[
-                _InfoRowData('税后现金', formatCents(month.netCashCents)),
+                _InfoRowData('税后工资', formatCents(month.netCashCents)),
                 _InfoRowData(
                   '单位公积金入账',
                   formatCents(month.employerHousingFundCents),
