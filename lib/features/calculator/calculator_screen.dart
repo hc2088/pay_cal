@@ -498,7 +498,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                 ),
                 const SizedBox(height: 5),
                 const Text(
-                  '个人失业保险和大病统筹属于现金扣款，已在计算依据的个人扣款项列出，不会加进综合到手。账户入账不等于可立即支取。',
+                  '个人失业保险和大病统筹会从工资中扣除，不计入综合到手。账户入账不等于可立即支取。',
                   style: TextStyle(color: _muted, fontSize: 10, height: 1.45),
                 ),
               ],
@@ -670,7 +670,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
             ),
             const SizedBox(height: 15),
             _DetailGroup(
-              title: '个人扣款（已从现金扣除）',
+              title: '个人缴费与扣款（会从工资中扣除）',
               rows: <_DetailLine>[
                 _DetailLine(
                   '个人养老保险 · ${formatRate(employeePensionRateBps)}',
