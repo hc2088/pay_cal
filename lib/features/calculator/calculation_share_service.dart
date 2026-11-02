@@ -111,9 +111,8 @@ Future<void> shareSalarySnapshot(
               child: Material(
                 color: _sharePage,
                 child: DefaultTextStyle.merge(
-                  // The app theme names PingFang SC globally, which Android
-                  // does not provide. Give the detached capture tree a native
-                  // font family so complex bold CJK glyphs use one fallback.
+                  // The app theme uses PingFang SC, which Android does not
+                  // provide, so use each platform's available system family.
                   style: TextStyle(
                     fontFamily: Platform.isIOS ? 'PingFang SC' : 'sans-serif',
                   ),
@@ -306,12 +305,14 @@ class _SalaryShareCard extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              const Text(
+              Text(
                 '薪酬测算',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 19,
-                  fontWeight: FontWeight.w800,
+                  fontWeight: Platform.isIOS
+                      ? FontWeight.w700
+                      : FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 3),
@@ -352,10 +353,10 @@ class _ShareSection extends StatelessWidget {
       children: <Widget>[
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             color: _shareNavy,
             fontSize: 14,
-            fontWeight: FontWeight.w800,
+            fontWeight: Platform.isIOS ? FontWeight.w700 : FontWeight.w800,
           ),
         ),
         const SizedBox(height: 2),
