@@ -7,6 +7,7 @@ import '../../calculation/money_format.dart';
 import '../../calculation/saved_calculation.dart';
 import 'calculator_providers.dart';
 import 'calculation_history_screen.dart';
+import 'calculation_share_service.dart';
 import 'calculator_settings_screen.dart';
 import 'methodology_screen.dart';
 
@@ -86,7 +87,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: <Widget>[
-                        _header(),
+                        _header(inputs, result),
                         const SizedBox(height: 20),
                         _parameters(inputs, history.length),
                         const SizedBox(height: 22),
@@ -109,7 +110,7 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
     );
   }
 
-  Widget _header() {
+  Widget _header(CalculatorInputs inputs, CalculationResult result) {
     return Row(
       children: <Widget>[
         Container(
@@ -155,6 +156,22 @@ class _CalculatorScreenState extends ConsumerState<CalculatorScreen> {
           ),
         ),
         const SizedBox(width: 12),
+        Builder(
+          builder: (BuildContext buttonContext) => IconButton(
+            tooltip: '截图并分享',
+            onPressed: () => shareSalarySnapshot(
+              buttonContext,
+              SalaryShareSnapshot.current(inputs: inputs, result: result),
+            ),
+            style: IconButton.styleFrom(
+              foregroundColor: _teal,
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: _line),
+            ),
+            icon: const Icon(Icons.ios_share_rounded, size: 19),
+          ),
+        ),
+        const SizedBox(width: 4),
         TextButton.icon(
           onPressed: () {
             Navigator.of(context).push(

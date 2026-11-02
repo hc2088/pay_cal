@@ -6,17 +6,17 @@
 
 ## 运行截图
 
-| 首页薪资方案与结果 | 测算参数页 | 固定缴费比例 | 历史月度拆解 |
+| 首页方案与分享入口 | 测算参数页 | 固定缴费比例 | 历史月度拆解 |
 | --- | --- | --- | --- |
-| <img src="screenshots/calculator.png" alt="首页当前薪资方案与全年结果" width="190"> | <img src="screenshots/calculator-settings.png" alt="薪酬方案和缴费基数编辑页" width="190"> | <img src="screenshots/contribution-rates.png" alt="单位和个人固定缴费比例" width="190"> | <img src="screenshots/history-month-detail.png" alt="历史记录中的月度扣款、个税和综合到手明细" width="190"> |
+| <img src="screenshots/calculator.png" alt="首页当前薪资方案、全年结果和截图分享入口" width="190"> | <img src="screenshots/calculator-settings.png" alt="薪酬方案和缴费基数编辑页" width="190"> | <img src="screenshots/contribution-rates.png" alt="单位和个人固定缴费比例" width="190"> | <img src="screenshots/history-month-detail.png" alt="历史记录中的月度扣款、个税和综合到手明细" width="190"> |
 
-截图由 iPhone 17 模拟器运行当前应用后重新截取；首页与参数页使用 ¥35,000 默认工资和默认参数，历史页面展示已保存的完整年度快照及逐月拆解。
+首页和历史结果概览已在 iPhone 17 模拟器上用当前代码重新截取，展示了截图分享入口。首页使用 ¥35,000 月薪、¥5,000 专项附加扣除的默认演示方案；历史页面展示已保存的年度快照。
 
 **公积金基数与历史测算**
 
-| 公积金基数默认联动 | 历史测算列表 | 已保存的结果概览 |
+| 公积金基数默认联动 | 历史测算列表 | 历史结果概览与分享入口 |
 | --- | --- | --- |
-| <img src="screenshots/housing-fund-base.png" alt="公积金缴存基数默认跟随社保基数" width="190"> | <img src="screenshots/calculation-history.png" alt="历史测算列表，支持删除和清空" width="190"> | <img src="screenshots/history-detail.png" alt="历史测算的全年结果、扣款和保存参数" width="190"> |
+| <img src="screenshots/housing-fund-base.png" alt="公积金缴存基数默认跟随社保基数" width="190"> | <img src="screenshots/calculation-history.png" alt="历史测算列表，支持删除和清空" width="190"> | <img src="screenshots/history-detail.png" alt="历史测算的全年结果、扣款、保存参数和截图分享入口" width="190"> |
 
 **可自定义参数的国家规则预览**
 
@@ -29,6 +29,7 @@
 - **首页薪资方案概览**：首页集中显示当前税前工资、专项附加扣除、公积金比例、工伤费率和缴费基数，并展示年度测算结果；编辑项统一收纳在二级参数页。
 - **参数编辑与固定比例说明**：可编辑工资、专项附加扣除、公积金比例、工伤费率及社保和公积金基数；二级页同时列出单位和个人养老、医疗、失业保险比例，以及个人大病统筹固定金额，供核对计算口径。
 - **保存历史测算**：点击“保存本次”保存当时的参数和完整逐月结果快照；历史列表显示年度概览，可打开结果拆解、删除单条记录或清空全部记录。
+- **截图分享薪酬方案**：首页和历史结果概览均可生成一张包含方案参数、全年摘要及 12 个月税前工资、个人扣款、个税和税后现金的 PNG 图片；分享时只传图片，不附带文本文件。iOS 和 Android 使用系统分享面板；Android 分享不可用时自动保存到相册。
 - **公积金基数独立设置**：默认跟随当前社保基数（社保可跟随税前工资或自定义），也可单独自定义公积金基数；页面显示联动来源和当前计算金额。
 - **自定义工伤费率**：单位工伤保险费率可编辑，默认演示值为 0.2%。
 - **国家规则速查**：专项附加扣除、公积金比例、公积金基数和工伤费率旁的信息按钮可打开 Markdown 规则说明，并通过官方链接查看完整政策。
@@ -113,6 +114,7 @@ lib/
 │   ├── calculator_settings_screen.dart # 二级参数设置和固定费率说明
 │   ├── calculation_history_screen.dart # 历史测算列表
 │   ├── saved_calculation_detail_screen.dart # 历史年度概览和逐月拆解
+│   ├── calculation_share_service.dart # 测算长图生成、系统分享和相册回退
 │   ├── methodology_screen.dart  # 应用内算法说明页
 │   ├── rule_preview_dialog.dart # 国家规则 Markdown 弹窗
 │   └── calculator_providers.dart
@@ -135,6 +137,8 @@ doc/
 - Riverpod：状态管理
 - Shared Preferences：本地参数和历史测算持久化
 - Flutter Markdown Plus：渲染应用内算法说明
+- Screenshot：把方案和逐月数据渲染为分享长图
+- Share Plus：调用 iOS / Android 系统分享面板；Gal：Android 分享不可用时保存到相册
 
 ## 许可证
 

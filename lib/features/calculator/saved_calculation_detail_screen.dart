@@ -5,6 +5,7 @@ import '../../calculation/calculation_engine.dart';
 import '../../calculation/money_format.dart';
 import '../../calculation/saved_calculation.dart';
 import 'calculation_history_format.dart';
+import 'calculation_share_service.dart';
 
 const Color _detailNavy = Color(0xFF18324B);
 const Color _detailTeal = Color(0xFF1D9A8A);
@@ -29,7 +30,21 @@ class SavedCalculationDetailScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F6FA),
-      appBar: AppBar(title: const Text('结果概览')),
+      appBar: AppBar(
+        title: const Text('结果概览'),
+        actions: <Widget>[
+          Builder(
+            builder: (BuildContext buttonContext) => IconButton(
+              tooltip: '截图并分享',
+              onPressed: () => shareSalarySnapshot(
+                buttonContext,
+                SalaryShareSnapshot.saved(calculation),
+              ),
+              icon: const Icon(Icons.ios_share_rounded),
+            ),
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 14, 20, 28),
         children: <Widget>[
