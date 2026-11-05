@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../calculation/calculator_inputs.dart';
 import '../../calculation/saved_calculation.dart';
 import '../../calculation/money_format.dart';
 import 'calculation_history_format.dart';
 import 'calculator_providers.dart';
+import 'income_breakdown_widgets.dart';
 import 'saved_calculation_detail_screen.dart';
 
 const Color _historyNavy = Color(0xFF18324B);
@@ -149,8 +151,14 @@ class _HistoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool followsSocial =
-        calculation.inputs.housingFundBaseMode.name == 'followSocialBase';
+    final IncomeTotals totals = IncomeTotals.fromMonths(calculation.months);
+    final inputs = calculation.inputs;
+    final String socialMode =
+        inputs.socialBaseMode == SocialBaseMode.followSalary ? '跟随工资' : '自定义';
+    final String housingMode =
+        inputs.housingFundBaseMode == HousingFundBaseMode.followSocialBase
+        ? '跟随社保'
+        : '自定义';
 
     return Card(
       color: Colors.white,
@@ -158,65 +166,111 @@ class _HistoryCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(20),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 8, 14),
-          child: Row(
+          padding: const EdgeInsets.fromLTRB(12, 7, 6, 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: <Widget>[
+                  Expanded(
+                    child: Text(
                       formatSavedTimestamp(calculation.savedAt),
                       style: const TextStyle(
                         color: _historyNavy,
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    const SizedBox(height: 5),
-                    Text(
-                      '工资 ${formatCents(calculation.inputs.grossMonthlySalaryCents)}  ·  '
-                      '社保 ${formatCents(calculation.inputs.socialBaseCents)}',
-                      style: const TextStyle(
-                        color: _historyMuted,
-                        fontSize: 11,
+                  ),
+                  IconButton(
+                    tooltip: '删除这条测算',
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline_rounded),
+                    color: _historyMuted,
+                    constraints: const BoxConstraints.tightFor(
+                      width: 34,
+                      height: 34,
+                    ),
+                    padding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+              Wrap(
+                spacing: 5,
+                runSpacing: 4,
+                children: <Widget>[
+                  _SchemeCondition(
+                    label: '月薪',
+                    value: formatCents(inputs.grossMonthlySalaryCents),
+                  ),
+                  _SchemeCondition(
+                    label: '专项扣除',
+                    value:
+                        '${formatCents(inputs.specialAdditionalDeductionCents)}/月',
+                  ),
+                  _SchemeCondition(
+                    label: '社保基数',
+                    value: '${formatCents(inputs.socialBaseCents)}·$socialMode',
+                  ),
+                  _SchemeCondition(
+                    label: '公积金基数',
+                    value:
+                        '${formatCents(inputs.housingFundBaseCents)}·$housingMode',
+                  ),
+                  _SchemeCondition(
+                    label: '公积金比例',
+                    value: formatRate(inputs.housingFundRateBps),
+                  ),
+                  _SchemeCondition(
+                    label: '工伤比例',
+                    value: formatRate(inputs.workInjuryRateBps),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 5),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 6),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF5F8FB),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: _HistoryMetric(
+                        label: '税前工资',
+                        amountCents: totals.grossSalaryCents,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '公积金基数 ${formatCents(calculation.inputs.housingFundBaseCents)}'
-                      '${followsSocial ? '（跟随社保）' : '（自定义）'}',
-                      style: const TextStyle(
-                        color: _historyMuted,
-                        fontSize: 11,
+                    Expanded(
+                      child: _HistoryMetric(
+                        label: '单位五险一金',
+                        amountCents: totals.employerContributionCents,
+                      ),
+                    ),
+                    Expanded(
+                      child: _HistoryMetric(
+                        label: '单位总成本',
+                        amountCents: totals.employerTotalCostCents,
+                      ),
+                    ),
+                    Expanded(
+                      child: _HistoryMetric(
+                        label: '税后总收入',
+                        amountCents: totals.personalAfterTaxIncomeCents,
+                        accent: true,
+                      ),
+                    ),
+                    Expanded(
+                      child: _HistoryMetric(
+                        label: '扣税',
+                        amountCents: totals.taxCents,
                       ),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: <Widget>[
-                  const Text(
-                    '全年综合到手',
-                    style: TextStyle(color: _historyMuted, fontSize: 10),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    formatCents(calculation.annualBenefitACents),
-                    style: const TextStyle(
-                      color: _historyTeal,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-              IconButton(
-                tooltip: '删除这条测算',
-                onPressed: onDelete,
-                icon: const Icon(Icons.delete_outline_rounded),
-                color: _historyMuted,
               ),
             ],
           ),
@@ -224,6 +278,88 @@ class _HistoryCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HistoryMetric extends StatelessWidget {
+  const _HistoryMetric({
+    required this.label,
+    required this.amountCents,
+    this.accent = false,
+  });
+
+  final String label;
+  final int amountCents;
+  final bool accent;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 2),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: <Widget>[
+        Text(
+          label,
+          maxLines: 2,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            color: _historyMuted,
+            fontSize: 7.5,
+            height: 1.1,
+          ),
+        ),
+        const SizedBox(height: 3),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.center,
+          child: Text(
+            formatCents(amountCents, withSymbol: false),
+            style: TextStyle(
+              color: accent ? _historyTeal : _historyNavy,
+              fontSize: 9.5,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+class _SchemeCondition extends StatelessWidget {
+  const _SchemeCondition({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(maxWidth: 220),
+    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+    decoration: BoxDecoration(
+      color: const Color(0xFFF5F8FB),
+      borderRadius: BorderRadius.circular(7),
+    ),
+    child: Text.rich(
+      TextSpan(
+        children: <InlineSpan>[
+          TextSpan(
+            text: '$label ',
+            style: const TextStyle(color: _historyMuted),
+          ),
+          TextSpan(
+            text: value,
+            style: const TextStyle(
+              color: _historyNavy,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: const TextStyle(fontSize: 8.5),
+    ),
+  );
 }
 
 class _EmptyHistory extends StatelessWidget {
