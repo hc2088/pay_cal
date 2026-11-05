@@ -259,7 +259,7 @@ class _HistoryCard extends StatelessWidget {
                     Expanded(
                       child: _HistoryMetric(
                         label: '税后总收入',
-                        amountCents: totals.personalAfterTaxIncomeCents,
+                        amountCents: totals.taxAfterTotalIncomeCents,
                         accent: true,
                       ),
                     ),

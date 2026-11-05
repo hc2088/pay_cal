@@ -8,11 +8,17 @@ const Color _incomeTeal = Color(0xFF1D9A8A);
 const Color _incomeMuted = Color(0xFF718195);
 const Color _incomeLine = Color(0xFFE7EDF3);
 
+int _taxAfterTotalIncomeForMonth(MonthlyCalculationResult month) =>
+    month.netCashCents +
+    month.employeePensionCents +
+    month.employerHousingFundCents +
+    month.employeeHousingFundCents;
+
 class IncomeTotals {
   const IncomeTotals({
     required this.grossSalaryCents,
     required this.netSalaryCents,
-    required this.personalAfterTaxIncomeCents,
+    required this.taxAfterTotalIncomeCents,
     required this.taxCents,
     required this.employerContributionCents,
     required this.personalContributionCents,
@@ -26,7 +32,7 @@ class IncomeTotals {
   factory IncomeTotals.fromMonths(Iterable<MonthlyCalculationResult> months) {
     int grossSalary = 0;
     int netSalary = 0;
-    int personalAfterTaxIncome = 0;
+    int taxAfterTotalIncome = 0;
     int tax = 0;
     int employerContribution = 0;
     int personalContribution = 0;
@@ -39,11 +45,7 @@ class IncomeTotals {
     for (final MonthlyCalculationResult month in months) {
       grossSalary += month.salaryCents;
       netSalary += month.netCashCents;
-      personalAfterTaxIncome +=
-          month.netCashCents +
-          month.employeePensionCents +
-          month.employerMedicalCents +
-          month.employeeMedicalCents;
+      taxAfterTotalIncome += _taxAfterTotalIncomeForMonth(month);
       tax += month.monthlyTaxCents;
       employerContribution +=
           month.employerSocialTotalCents + month.employerHousingFundCents;
@@ -59,7 +61,7 @@ class IncomeTotals {
     return IncomeTotals(
       grossSalaryCents: grossSalary,
       netSalaryCents: netSalary,
-      personalAfterTaxIncomeCents: personalAfterTaxIncome,
+      taxAfterTotalIncomeCents: taxAfterTotalIncome,
       taxCents: tax,
       employerContributionCents: employerContribution,
       personalContributionCents: personalContribution,
@@ -73,7 +75,7 @@ class IncomeTotals {
 
   final int grossSalaryCents;
   final int netSalaryCents;
-  final int personalAfterTaxIncomeCents;
+  final int taxAfterTotalIncomeCents;
   final int taxCents;
   final int employerContributionCents;
   final int personalContributionCents;
@@ -343,7 +345,7 @@ class MonthlyIncomeTable extends StatelessWidget {
                   ),
                   formatCents(totals.employerTotalCostCents, withSymbol: false),
                   formatCents(
-                    totals.personalAfterTaxIncomeCents,
+                    totals.taxAfterTotalIncomeCents,
                     withSymbol: false,
                   ),
                   formatCents(totals.taxCents, withSymbol: false),
@@ -355,7 +357,7 @@ class MonthlyIncomeTable extends StatelessWidget {
         ),
         SizedBox(height: compact ? 4 : 7),
         Text(
-          '税后总收入 = 税后工资 + 个人养老账户入账 + 双边医保账户入账（单位和个人）；单位总成本 = 税前工资 + 单位五险一金。',
+          '税后总收入 = 税后工资 + 个人养老账户入账 + 双边公积金账户入账（单位和个人）；单位总成本 = 税前工资 + 单位五险一金。',
           style: TextStyle(
             color: _incomeMuted,
             fontSize: compact ? 7 : 9,
@@ -375,10 +377,7 @@ class MonthlyIncomeTable extends StatelessWidget {
     ),
     formatCents(month.employerTotalCostCents, withSymbol: false),
     formatCents(
-      month.netCashCents +
-          month.employeePensionCents +
-          month.employerMedicalCents +
-          month.employeeMedicalCents,
+      _taxAfterTotalIncomeForMonth(month),
       withSymbol: false,
     ),
     formatCents(month.monthlyTaxCents, withSymbol: false),
