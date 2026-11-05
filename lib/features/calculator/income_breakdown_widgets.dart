@@ -42,6 +42,7 @@ class IncomeTotals {
       personalAfterTaxIncome +=
           month.netCashCents +
           month.employeePensionCents +
+          month.employerMedicalCents +
           month.employeeMedicalCents;
       tax += month.monthlyTaxCents;
       employerContribution +=
@@ -354,7 +355,7 @@ class MonthlyIncomeTable extends StatelessWidget {
         ),
         SizedBox(height: compact ? 4 : 7),
         Text(
-          '税后总收入 = 税后工资 + 个人养老账户入账 + 个人医保账户入账；单位总成本 = 税前工资 + 单位五险一金。',
+          '税后总收入 = 税后工资 + 个人养老账户入账 + 双边医保账户入账（单位和个人）；单位总成本 = 税前工资 + 单位五险一金。',
           style: TextStyle(
             color: _incomeMuted,
             fontSize: compact ? 7 : 9,
@@ -376,6 +377,7 @@ class MonthlyIncomeTable extends StatelessWidget {
     formatCents(
       month.netCashCents +
           month.employeePensionCents +
+          month.employerMedicalCents +
           month.employeeMedicalCents,
       withSymbol: false,
     ),

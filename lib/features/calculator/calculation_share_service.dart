@@ -214,7 +214,7 @@ class _SalaryShareCard extends StatelessWidget {
           const SizedBox(height: 12),
           _ShareSection(
             title: '逐月收入明细',
-            subtitle: '单位：元 · 展示税前工资、单位成本、税后总收入和扣税',
+            subtitle: '单位：元 · 税前工资、单位五险一金、单位总成本、税后总收入、扣税',
             child: MonthlyIncomeTable(
               months: snapshot.months,
               showHeading: false,
