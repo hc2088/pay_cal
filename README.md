@@ -1,154 +1,152 @@
 # 薪酬测算
 
-一个基于 Flutter 的离线薪酬估算器，帮助你把固定月薪拆解为税后工资、单位用工成本和长期权益。支持 Android 与 iOS；无需注册或联网，测算参数和历史快照保存在设备本地。
+**看懂到手工资，也看清五险一金和不同薪资方案的差别。**
 
-> 本项目用于薪酬方案估算和学习，不构成工资、税务或社保建议。示例费率不代表全国统一标准，计算结果不等同于正式工资单或税务申报结果。
+输入城市、月薪和缴费参数，查看全年与每月的收入、扣款和账户缴存；把方案保存下来，就能逐项比较，再生成图片留存或分享。
 
-## 运行截图
+Android / iOS · 离线测算 · 无需登录 · 方案保存在本机
 
-| 首页方案与结果 | 首页逐月收入表格 | 固定缴费比例 | 历史测算列表 |
-| --- | --- | --- | --- |
-| <img src="screenshots/calculator.png" alt="首页当前薪资方案、全年结果和截图分享入口" width="190"> | <img src="screenshots/monthly-expanded.png" alt="首页逐月收入表格，显示税前工资、单位五险一金、单位总成本、税后总收入和扣税" width="190"> | <img src="screenshots/contribution-rates.png" alt="单位和个人固定缴费比例" width="190"> | <img src="screenshots/calculation-history.png" alt="历史测算列表，显示薪资方案条件和五项年度汇总" width="190"> |
+## 一年的收入，分开看才清楚
 
-首页、逐月表格、历史测算和分享长图已用当前代码在 iPhone 17 Pro（iOS 26.5）模拟器重新截取。首页和历史详情的逐月表格采用一致的五项数据：税前工资、单位五险一金、单位总成本、税后总收入、扣税。其中税后总收入 = 税后工资 + 个人养老账户入账 + 双边公积金账户入账（单位和个人）。演示方案为月薪 ¥35,000、专项附加扣除 ¥5,000；历史列表展示已保存的方案条件和年度汇总。
+结果页把两件事放在最前面：**工资扣完后拿到多少**，以及**加上账户缴存后合计多少**。总额与组成放在同一张卡片里，不用翻到其他位置找扣款或分项。
 
-**薪酬方案分享图片示例**
-
-首页可生成一张包含当前参数、全年结果和 12 个月五项数据明细的长图，保存后便于直接分享：
-
-<p align="center"><img src="screenshots/salary-share-preview.png" alt="薪酬方案分享图片，包含当前参数、全年测算结果和逐月收入明细" width="366"></p>
-
-**公积金基数与历史测算**
-
-| 公积金基数默认联动 | 历史结果概览与分享入口 | 历史逐月五项汇总表 |
-| --- | --- | --- |
-| <img src="screenshots/housing-fund-base.png" alt="公积金缴存基数默认跟随社保基数" width="190"> | <img src="screenshots/history-detail.png" alt="历史测算的保存参数、全年结果和截图分享入口" width="190"> | <img src="screenshots/history-month-detail.png" alt="历史结果详情中的逐月五项数据表和全年合计" width="190"> |
-
-**可自定义参数的国家规则预览**
-
-| 工伤保险费率规则 | 公积金缴存基数规则 |
+| 税后年薪：工资扣在哪里 | 年度总收入：由哪些部分组成 |
 | --- | --- |
-| <img src="screenshots/rules-dialog.png" alt="工伤保险费率国家规则弹窗" width="220"> | <img src="screenshots/housing-fund-base-rules.png" alt="住房公积金基数国家规则弹窗" width="220"> |
+| <a href="screenshots/v2/v2-results.png"><img src="screenshots/v2/v2-results.png" width="280" alt="税后年薪与税前年薪、个税、个人社保和个人公积金扣款同卡展示"></a> | <a href="screenshots/v2/v2-annual-total-income.png"><img src="screenshots/v2/v2-annual-total-income.png" width="280" alt="年度总收入及税后工资、公积金、医保个人账户和个人养老保险四项组成"></a> |
 
-## 功能
+| 页面上的金额 | 表示什么 |
+| --- | --- |
+| **税后年薪 / 税后工资** | 税前工资及奖金，减去个人社保、个人公积金和已预扣个税后的工资现金。 |
+| **年度 / 月度总收入** | 税后工资＋公司与个人公积金＋医保个人账户估算＋个人养老保险缴费；年、月口径一致。 |
+| **单位总成本** | 单位承担的工资、奖金、单位社保和单位公积金，单独展示。 |
 
-- **首页薪资方案概览**：首页集中显示当前税前工资、专项附加扣除、公积金比例、工伤费率和缴费基数，并展示年度测算结果；编辑项统一收纳在二级参数页。
-- **参数编辑与固定比例说明**：可编辑工资、专项附加扣除、公积金比例、工伤费率及社保和公积金基数；二级页同时列出单位和个人养老、医疗、失业保险比例，以及个人大病统筹固定金额，供核对计算口径。
-- **保存历史测算**：点击“保存本次”保存当时的参数和完整逐月结果快照；历史列表显示年度概览，可打开结果拆解、删除单条记录或清空全部记录。
-- **截图分享薪酬方案**：首页和历史结果概览均可生成一张包含方案参数、全年摘要及 12 个月逐月表格的 PNG 图片；表格展示税前工资、单位五险一金、单位总成本、税后总收入和扣税。分享时只传图片，不附带文本文件。iOS 和 Android 使用系统分享面板；Android 分享不可用时自动保存到相册。
-- **公积金基数独立设置**：默认跟随当前社保基数（社保可跟随税前工资或自定义），也可单独自定义公积金基数；页面显示联动来源和当前计算金额。
-- **自定义工伤费率**：单位工伤保险费率可编辑，默认演示值为 0.2%。
-- **国家规则速查**：专项附加扣除、公积金比例、公积金基数和工伤费率旁的信息按钮可打开 Markdown 规则说明，并通过官方链接查看完整政策。
-- **便捷键盘操作**：点击页面空白区域即可收起输入键盘。
-- **灵活设置缴费基数**：社保基数可以跟随工资，也可以自定义；应用不会自动套用地区缴费上下限。
-- **查看全年或逐月结果**：首页和历史结果详情使用统一的逐月表格，列出税前工资、单位五险一金、单位总成本、税后总收入和扣税，并显示全年合计。税后总收入按“税后工资 + 个人养老账户入账 + 双边公积金账户入账（单位和个人）”计算。历史详情还可展开逐月扣税依据，查看个人缴费、累计扣除、适用税率档位和预扣税。
-- **拆分权益账户入账**：在结果页和历史结果概览中分别查看双边公积金、个人医保账户及个人养老账户入账金额。
-- **逐月收入表格**：首页和历史详情使用相同的紧凑表格展示每月五项关键数据；逐月扣税依据单独折叠，展开后查看累计预扣计算过程。
-- **拆解收入与缴费**：展开“计算依据”查看个人扣款、单位缴费、累计应税收入、预扣税额和综合到手组成。个人失业保险和大病统筹属于扣款，不计入综合到手。
-- **对比两种综合口径**：综合到手包含税后工资、双边公积金和个人医保账户入账；综合到手 + 养老再计入个人养老账户。个人养老保险、失业保险和大病统筹是扣款，不作为到手权益重复计算。
-- **离线使用并保存数据**：当前参数与历史测算保存在设备本地，重新打开后仍可查看；可恢复默认参数。
-- **内置算法文档**：在应用中查看费率假设、累计预扣法、税率表、速算扣除数和适用范围。
+总收入包含账户缴存，**不等于可以直接支取的现金**。社保中的“个人养老保险”与另行自愿缴存的“个人养老金”分开计算和展示；医保账户金额标明为估算。
 
-## 默认测算方案
+## 把两份方案放在一起比较
 
-| 参数 | 默认值 |
-| --- | ---: |
-| 月税前工资 | ¥35,000 |
-| 月专项附加扣除 | ¥5,000 |
-| 社保缴费基数 | 跟随工资（¥35,000） |
-| 公积金缴存基数 | 跟随社保基数（¥35,000） |
-| 公积金比例 | 12%（单位和个人各缴一份） |
-| 工伤保险费率 | 默认 0.2%（可自定义） |
+拿到两份薪资方案，或者想看看不同公积金比例的影响，可以分别保存后勾选对比。每份方案会保留计算时的参数和结果，方便之后回看。
 
-固定月薪按完整 12 个月测算。默认参数下，全年单位成本为 **¥581,700.00**，全年税后工资为 **¥301,291.20**，全年税后总收入为 **¥435,691.20**，全年综合到手为 **¥410,491.20**，全年综合到手 + 养老为 **¥444,091.20**，全年预扣个税为 **¥24,172.80**。
+- **按项目并列看**：税后收入、含账户缴存的收入、个税、五险一金、单位成本及缴费参数。
+- **先全年，再当月**：年度项目在前，月度项目在后；可切换月份查看变化。
+- **更快找到差别**：显示金额差额，支持“只看差异”和交换 A / B。
+- **保留不同假设**：支持命名保存、复制、重命名或删除，方便管理多个方案。
 
-## 计算口径与适用范围
+| 保存方案及其参数 | 两份方案逐项对比 |
+| --- | --- |
+| <a href="screenshots/v2/v2-plans.png"><img src="screenshots/v2/v2-plans.png" width="280" alt="已保存方案展示税后年薪、社保基数、公积金比例、扣除和奖金方式"></a> | <a href="screenshots/v2/v2-comparison.png"><img src="screenshots/v2/v2-comparison.png" width="280" alt="两个不同月薪方案按年度项目并列展示，并标出各项金额差额"></a> |
 
-应用采用演示费率：单位养老 16%、医疗 9.8%、失业 0.5%；个人养老 8%、医疗 2%、失业 0.5%。工伤保险由单位承担，费率默认 0.2% 并可自定义。公积金按用户输入的比例由单位和个人各缴一份，个人缴费另含固定 ¥3/月的大病统筹示例值。社保险种使用同一个社保基数；公积金基数默认跟随当前社保基数，也可单独自定义。
+## 每个月能核对，结果也能带走
 
-个税按照每月 ¥5,000 基本减除费用和用户填写的专项附加扣除，使用居民个人工资薪金**累计预扣法**及年度预扣率表计算。默认 ¥5,000 专项附加扣除仅为示例输入，不是所有人的固定法定扣除额。
+从结果页进入“更多月详情”，可以查看 12 个月的税后工资、个税和月度总收入。点击某个月，还能展开个人社保各险种、双方公积金以及累计预扣个税的计算过程。
 
-当前版本按同一单位、固定月薪、完整 12 个月估算，不包含年中调薪、奖金单独计税、入离职月份、多家单位、地区费率模板或社保缴费上下限校验。实际缴费和预扣税额会因地区、年度、个人情况及年度汇算而变化；请以主管部门规定和实际工资单为准。
+测算结果和方案对比都可以生成长图。先预览，再选择**保存相册**或**系统分享**；结果图会带上收入拆分、参数配置和 12 个月明细，便于自己留存或与他人讨论。
 
-## 开始使用
+| 每月收入与四项组成 | 分享前预览 |
+| --- | --- |
+| <a href="screenshots/v2/v2-months.png"><img src="screenshots/v2/v2-months.png" width="280" alt="月收入列表展示税后工资、个税及含个人养老保险的月度总收入"></a> | <a href="screenshots/v2/v2-share-preview.png"><img src="screenshots/v2/v2-share-preview.png" width="280" alt="测算结果长图预览，底部提供保存相册和系统分享按钮"></a> |
 
-### 环境要求
+## 三步开始测算
 
-- Flutter **3.38.0 或更新版本**（项目使用 Flutter 3.38.5 / Dart 3.10.4）
-- Android：Android Studio、Android SDK 和 Java 21 工具链
-- iOS：macOS、Xcode 和 CocoaPods
+1. **选择城市，核对缴费参数。** 首次默认北京；城市可按中文、拼音或首字母搜索。选城后带入参考基数范围和比例，也可以手动修改各险种及公积金参数。
+2. **填写工资和扣除。** 输入税前月薪，按需补充年终奖、专项附加扣除与个人养老金。符合条件的年终奖可比较单独计税和并入工资两种测算方式。
+3. **查看、保存、比较。** 核对参数后开始测算，看全年结果与月详情；需要比较时，将两份结果保存为方案后勾选对比。
 
-### 获取依赖并运行
+<details>
+<summary>查看填写参数与五险一金设置截图</summary>
 
-```bash
-git clone git@github.com:hc2088/pay_cal.git
-cd pay_cal
+各险种可以分别调整个人 / 单位比例、实际基数、上下限、固定费用与舍入方式。也支持恢复城市参考值或该城市上次调整。
+
+| 填写月薪与城市 | 展开查看养老保险参数 |
+| --- | --- |
+| <a href="screenshots/v2/v2-home-configured.png"><img src="screenshots/v2/v2-home-configured.png" width="280" alt="已填写演示月薪的测算首页，显示城市、年份与五险一金入口"></a> | <a href="screenshots/v2/v2-contributions-expanded.png"><img src="screenshots/v2/v2-contributions-expanded.png" width="280" alt="展开后的养老保险设置，可调整个人比例、单位比例和实际缴费基数"></a> |
+
+</details>
+
+## 计算过程看得到
+
+“计算说明”展示年度税后工资、应纳税所得额和个税的公式及对应金额。点击提示图标可查看税率与速算扣除表，并定位本方案所在税档。已预扣个税、年度应纳税估算和可能的汇算差额分别列示。
+
+<details>
+<summary>查看累计扣税明细与速算扣除表</summary>
+
+| 累计收入与扣除怎么得到 | 查看税率及速算扣除数 |
+| --- | --- |
+| <a href="screenshots/v2/v2-month-tax-basis.png"><img src="screenshots/v2/v2-month-tax-basis.png" width="280" alt="当月详情列出累计收入、基本减除费用、社保公积金及附加扣除"></a> | <a href="screenshots/v2/v2-tax-rates.png"><img src="screenshots/v2/v2-tax-rates.png" width="280" alt="年度税率与速算扣除表，标明演示方案适用税档"></a> |
+
+</details>
+
+完整口径见 [算法说明](doc/薪酬算法说明.md)。本文图片为当前 App 在 iOS 模拟器中的实际运行截图，可点击查看原图；金额使用演示方案，不代表真实工资记录或已核验的城市政策。
+
+## 使用前了解这些
+
+**城市参数是起点，仍要核对。** 内置 337 条城市参考配置，尚未完成全国完整年度政策核验。请按当地规则和单位实际缴费情况确认；缺失项需补齐。自定义估算会把当前参数用于全年，并在结果中标注。详细状态见 [城市配置说明](doc/改版设计/04-全国城市配置与自动带入方案.md)。
+
+**本版适合全年固定月薪测算。** 当前范围为居民个人、全年同一单位、固定月薪及一笔全年一次性奖金。年中调薪、入离职、多单位及其他综合所得尚不在本版输入范围内。结果用于理解与比较薪酬，不替代工资单或税务申报。
+
+**数据留在本机。** 无需注册或登录，工资、草稿和方案保存在本地，测算可离线完成。相册保存和系统分享由你主动发起；相册权限被拒绝时，可以通过“去设置”调整后再次保存。
+
+## 本地运行
+
+使用 Flutter 3.38.5 / Dart 3.10.4 开发。Android 需要 Android SDK 与 Java 工具链；iOS 需要 macOS、Xcode 与 CocoaPods。
+
+```sh
 flutter pub get
 flutter run
 ```
 
-也可以指定设备运行：
+<details>
+<summary>开发者：构建、验证与代码目录</summary>
 
-```bash
-flutter run -d <device-id>
+常用检查与构建：
+
+```sh
+flutter analyze
+flutter test
+flutter build apk --debug
+flutter build ios --simulator --debug --no-codesign
 ```
 
-如果使用 FVM 管理 Flutter 版本：
+Android 正式构建使用自己的签名配置，参考 [签名配置示例](android/key.properties.example)。从集成测试切换到 Release 构建时，使用普通构建命令，让 Flutter 重新生成对应模式的插件注册文件。
 
-```bash
-fvm use 3.38.5
-fvm flutter pub get
-fvm flutter run
+设备端流程与截图使用独立测试数据库，不清空已有方案：
+
+```sh
+flutter drive --driver=test_driver/integration_test.dart --target=integration_test/payroll_flow_test.dart -d <simulator-or-emulator-id> --keep-app-running
 ```
 
-### 构建 Android APK
+截图写入 `screenshots/v2/`，覆盖填写参数、缴费设置、结果拆分、月详情、算法说明、方案对比与分享。README 使用其中的代表性页面。测试依赖的 SQLite FFI 使用本机系统库。
 
-```bash
-flutter build apk --release
+原生相册专项验证使用不含个人薪资的测试图片；首次运行需要响应系统授权弹窗：
+
+```sh
+flutter drive --driver=test_driver/integration_test.dart --target=integration_test/gallery_save_test.dart -d <simulator-or-emulator-id> --keep-app-running
+# 在设备设置中拒绝权限后，验证拒绝、取消和再次保存：
+flutter drive --driver=test_driver/integration_test.dart --target=integration_test/gallery_save_test.dart -d <simulator-or-emulator-id> --dart-define=GALLERY_EXPECT_DENIED=true --keep-app-running
 ```
 
-未配置个人发布密钥时，项目会使用 Android debug 密钥签名，生成可安装的本地体验 APK；如果要正式发布，请使用自己的 keystore，并参照 [`android/key.properties.example`](android/key.properties.example) 配置本机的 `android/key.properties`。真实 keystore 和密码不会提交到仓库。
+第二条适用于需要相册 / 存储授权的系统。iOS 14 及以上保存分享图仅申请添加照片；iOS 13 使用兼容授权。Android 10 及以下按当前 Gal 2.3.3 的实现申请写入权限，Android 11 及以上通过 MediaStore 保存生成的图片。原生权限配置修改后需重新构建安装，热重载不会生效。
 
-## 项目结构
+验证完成后，用 `flutter run -t lib/main.dart` 恢复普通应用入口。最新验证结果见 [实现与验证记录](doc/改版设计/05-实现与验证记录.md)。
 
-```text
-lib/
-├── calculation/       # 输入模型、金额格式化和薪酬计算引擎
-├── data/              # 本地参数与历史测算存储
-├── features/calculator/
-│   ├── calculator_screen.dart    # 首页方案概览、结果和计算拆解
-│   ├── calculator_settings_screen.dart # 二级参数设置和固定费率说明
-│   ├── calculation_history_screen.dart # 历史测算列表
-│   ├── saved_calculation_detail_screen.dart # 历史年度概览和逐月拆解
-│   ├── calculation_share_service.dart # 测算长图生成、系统分享和相册回退
-│   ├── income_breakdown_widgets.dart # 全年收益卡片与逐月五项数据表
-│   ├── salary_scheme_panel.dart # 首页、历史详情和分享图共用的方案参数卡片
-│   ├── tax_basis_breakdown.dart # 逐月累计预扣个税依据
-│   ├── methodology_screen.dart  # 应用内算法说明页
-│   ├── rule_preview_dialog.dart # 国家规则 Markdown 弹窗
-│   └── calculator_providers.dart
-└── main.dart
+| 路径 | 内容 |
+| --- | --- |
+| `lib/domain/` | 整数金额、缴费比例、累计预扣与方案对比 |
+| `lib/application/` | 草稿、城市切换、方案与保存状态 |
+| `lib/data/` | SQLite、本地迁移与城市参考目录 |
+| `lib/features/payroll/` | 测算、结果、方案、分享界面 |
+| `lib/calculation/` | 旧版快照兼容模型与格式化工具 |
+| `assets/policies/` | 城市参考配置及来源许可 |
+| `test/` / `integration_test/` | 算法、迁移、布局与设备端验证 |
+| `tool/build_city_catalog.py` | 城市参考目录生成脚本 |
 
-doc/
-├── 薪酬算法说明.md
-├── rules/                       # 可编辑参数的政策速查 Markdown
-├── 薪酬测算Flutter产品设计文档.md
-└── 薪酬测算Flutter研发实现文档.md
-```
+旧 SharedPreferences 数据迁移到 SQLite 时保留原始备份；缺失历史月明细不补算。
 
-算法细节请阅读[薪酬算法说明](doc/薪酬算法说明.md)，产品范围和交互见[产品设计文档](doc/薪酬测算Flutter产品设计文档.md)，技术实现见[研发实现文档](doc/薪酬测算Flutter研发实现文档.md)。
+</details>
 
-应用内四份规则弹窗的 Markdown 原文位于 [doc/rules](doc/rules)：[专项附加扣除](doc/rules/special_additional_deductions.md)、[住房公积金比例](doc/rules/housing_fund_rate.md)、[住房公积金缴存基数](doc/rules/housing_fund_base.md)、[工伤保险费率](doc/rules/work_injury_rate.md)。
+## 更多资料与许可
 
-## 技术栈
+[产品改版总览](doc/改版设计/00-改版总览.md) · [算法说明](doc/薪酬算法说明.md) · [实现与验证记录](doc/改版设计/05-实现与验证记录.md)
 
-- Flutter / Dart
-- Riverpod：状态管理
-- Shared Preferences：本地参数和历史测算持久化
-- Flutter Markdown Plus：渲染应用内算法说明
-- Screenshot：把方案和逐月数据渲染为分享长图
-- Share Plus：调用 iOS / Android 系统分享面板；Gal：Android 分享不可用时保存到相册
+城市参考目录整理自 [city-salary](https://github.com/weante/city-salary) 的 MIT 数据及项目采集底稿，保留来源与许可；参考目录不等于政府发布的政策库。
 
-## 许可证
-
-本项目采用 [MIT License](LICENSE)。第三方依赖仍遵循各自的许可证。
+项目采用 [MIT License](LICENSE)，第三方依赖和参考数据保留各自许可。

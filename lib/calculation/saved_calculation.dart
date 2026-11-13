@@ -160,7 +160,8 @@ class SavedCalculation {
         throw const FormatException('Invalid saved monthly result list');
       }
     } else if (schemaVersion == 1) {
-      months = CalculationEngine.calculate(inputs).months;
+      // A missing historical ledger cannot be reconstructed with today's rules.
+      months = const <MonthlyCalculationResult>[];
     } else {
       throw const FormatException('Missing saved monthly result list');
     }

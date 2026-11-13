@@ -3,13 +3,13 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:gal/gal.dart';
 import 'package:screenshot/screenshot.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../calculation/calculation_engine.dart';
 import '../../calculation/calculator_inputs.dart';
 import '../../calculation/saved_calculation.dart';
+import '../../services/gallery_save_service.dart';
 import 'income_breakdown_widgets.dart';
 import 'salary_scheme_panel.dart';
 
@@ -152,15 +152,13 @@ Future<void> shareSalarySnapshot(
       if (!Platform.isAndroid) {
         rethrow;
       }
-      final bool hasAccess = await Gal.hasAccess() || await Gal.requestAccess();
-      if (!hasAccess) {
-        throw StateError('Gallery permission was denied');
-      }
-      await Gal.putImage(imageFile.path, album: '薪酬测算');
       if (context.mounted) {
-        ScaffoldMessenger.of(
+        await saveImageToGallery(
           context,
-        ).showSnackBar(const SnackBar(content: Text('系统分享暂不可用，截图已保存到相册。')));
+          imageFile.path,
+          album: '薪酬测算',
+          successMessage: '系统分享暂不可用，截图已保存到相册。',
+        );
       }
     }
   } catch (_) {

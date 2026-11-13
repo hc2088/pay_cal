@@ -1,46 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import 'calculation/calculator_inputs.dart';
-import 'calculation/saved_calculation.dart';
-import 'data/calculation_history_repository.dart';
-import 'data/calculator_settings_repository.dart';
-import 'features/calculator/calculator_providers.dart';
-import 'features/calculator/calculator_screen.dart';
+import 'features/payroll/payroll_app.dart';
+import 'application/payroll_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final CalculatorSettingsRepository repository =
-      CalculatorSettingsRepository();
-  final CalculationHistoryRepository historyRepository =
-      CalculationHistoryRepository();
-  final CalculatorInputs initialInputs = await repository.load();
-  final List<SavedCalculation> initialHistory = await historyRepository.load();
-
-  runApp(
-    ProviderScope(
-      overrides: [
-        settingsRepositoryProvider.overrideWithValue(repository),
-        initialInputsProvider.overrideWithValue(initialInputs),
-        calculationHistoryRepositoryProvider.overrideWithValue(
-          historyRepository,
-        ),
-        initialCalculationHistoryProvider.overrideWithValue(initialHistory),
-      ],
-      child: const SalaryCalculatorApp(),
-    ),
-  );
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks([
+      'city-salary reference data',
+    ], await rootBundle.loadString('assets/policies/CITY_DATA_LICENSE.txt'));
+  });
+  runApp(const ProviderScope(child: SalaryCalculatorApp()));
 }
 
 class SalaryCalculatorApp extends StatelessWidget {
-  const SalaryCalculatorApp({super.key});
+  const SalaryCalculatorApp({super.key, this.home, this.controllerLoader});
+
+  final Widget? home;
+  final Future<PayrollController> Function()? controllerLoader;
 
   @override
   Widget build(BuildContext context) {
     const Color navy = Color(0xFF18324B);
     const Color teal = Color(0xFF1D9A8A);
 
-    return MaterialApp(
+    Widget buildApp(Widget page) => MaterialApp(
       title: '薪酬测算',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
@@ -102,7 +88,13 @@ class SalaryCalculatorApp extends StatelessWidget {
         ),
         dividerColor: const Color(0xFFE8EDF2),
       ),
-      home: const CalculatorScreen(),
+      home: page,
     );
+    return home != null
+        ? buildApp(home!)
+        : PayrollBootstrap(
+            appBuilder: buildApp,
+            controllerLoader: controllerLoader,
+          );
   }
 }

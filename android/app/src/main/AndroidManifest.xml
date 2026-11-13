@@ -1,9 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.pay_cal">
+    <!-- Gal 2.x uses legacy writes through Android 10 (API 29). Later Android
+         versions save our generated images through MediaStore without read access. -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="29" />
-   <application
+    <application
         android:label="薪酬测算"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"

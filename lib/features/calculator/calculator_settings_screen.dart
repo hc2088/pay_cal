@@ -303,11 +303,11 @@ class _CalculatorSettingsScreenState
               ],
             ),
             const SizedBox(height: 12),
-            _SettingsCard(
+            const _SettingsCard(
               title: '固定缴费比例',
               subtitle: '按本测算模型预设展示，不支持修改',
               children: <Widget>[
-                const _RateSection(
+                _RateSection(
                   title: '单位承担',
                   rows: <_RateData>[
                     _RateData('养老保险', employerPensionRateBps),
@@ -315,8 +315,8 @@ class _CalculatorSettingsScreenState
                     _RateData('失业保险', employerUnemploymentRateBps),
                   ],
                 ),
-                const SizedBox(height: 12),
-                const _RateSection(
+                SizedBox(height: 12),
+                _RateSection(
                   title: '个人承担',
                   rows: <_RateData>[
                     _RateData('养老保险', employeePensionRateBps),
@@ -324,8 +324,8 @@ class _CalculatorSettingsScreenState
                     _RateData('失业保险', employeeUnemploymentRateBps),
                   ],
                 ),
-                const SizedBox(height: 9),
-                const _ReadOnlyRow(
+                SizedBox(height: 9),
+                _ReadOnlyRow(
                   label: '个人大病统筹',
                   value: '¥3.00 / 月',
                   helper: '计入个人扣款，不计入综合权益',
