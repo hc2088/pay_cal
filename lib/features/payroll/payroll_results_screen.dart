@@ -60,7 +60,12 @@ class _PayrollResultsScreenState extends ConsumerState<PayrollResultsScreen> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          20,
+          20,
+          20 + MediaQuery.paddingOf(context).bottom,
+        ),
         children: [
           Text(
             '${d.city.name} · ${d.year} 年 · ${resultStrategyName(r)}',
